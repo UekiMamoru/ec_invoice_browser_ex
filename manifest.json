@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "ECインボイスダウンローダー",
+  "short_name": "ECD",
+  "version": "0.0.1",
+  "default_locale": "ja",
+  "icons": {
+    "64": "/img/logo.png"
+  },
+  "action": {
+    "default_popup": "/action/index.html",
+    "default_icon": {
+      "64": "/img/logo.png"
+    },
+    "default_title": "アクションページ"
+  },
+  "permissions": [
+    "storage",
+    "downloads",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "/js/worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.amazon.co.jp/*"],
+      "js": ["/js/content.js"],
+      "css": ["/css/style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "/js/*",
+        "/css/*",
+        "/json/*",
+        "/img/*",
+        "/templates/*"
+      ],
+      "matches": [
+        "https://*.amazon.co.jp/*"]
+    }
+  ],
+  "options_page": "/option/index.html"
+}

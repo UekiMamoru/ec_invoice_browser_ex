@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "インボイスダウンローダー",
+    "description": "The title of the extension."
+  },
+  "actionTitle": {
+    "message": "アクションページ",
+    "description": "The title of the action popup page."
+  }
+}
