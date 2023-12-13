@@ -1,4 +1,4 @@
-// amazonOrderPageFrame()
+amazonOrderPageFrame()
 
 function amazonOrderPageFrame() {
 
@@ -26,7 +26,7 @@ function amazonOrderPageFrame() {
             // message.data = list;
             message.href = location.href;
             // ページングの最後のデータを取得
-            message.lastIndex = 0
+            message.lastIndex = (document.querySelector(`.a-pagination .a-last`).previousElementSibling.querySelector("a").textContent.trim()-0)-1
             window.parent.postMessage(message, "*");
 
         }
@@ -38,7 +38,7 @@ function amazonOrderPageFrame() {
 
 
     function getOrderList() {
-        return Array.from(document.querySelectorAll(".order.js-order-card"));
+        return Array.from(document.querySelectorAll(".order.js-order-card,.order-card.js-order-card"));
     }
 
     // // オーダーリストが取れるまで待ってメッセージパッシング
@@ -46,9 +46,10 @@ function amazonOrderPageFrame() {
     //     window.parent.postMessage(document.body.innerHTML, "*");
     // }, 500)
 
-
     function isOrderPage() {
         return location.pathname.match('/gp/your-account/order-history')
+            || location.pathname.match("/gp/css/order-history")
+            || location.pathname.match(`/your-orders/orders`)
     }
 
     function noOrder() {
