@@ -1,4 +1,4 @@
-amazonOrderPageFrame()
+// amazonOrderPageFrame()
 
 function amazonOrderPageFrame() {
 
@@ -25,6 +25,8 @@ function amazonOrderPageFrame() {
             message.nodeStr = wrap.innerHTML;
             // message.data = list;
             message.href = location.href;
+            // ページングの最後のデータを取得
+            message.lastIndex = 0
             window.parent.postMessage(message, "*");
 
         }

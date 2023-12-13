@@ -28,7 +28,7 @@ function amazonOrderPage() {
                     let container = document.getElementById("ordersContainer");
                     let cards = container.querySelectorAll(".js-order-card")
                     let card = cards[cards.length - 1];
-                    if(list.length)card.after(...list)
+                    if (list.length) card.after(...list)
                 }
             }
         },
@@ -38,13 +38,14 @@ function amazonOrderPage() {
     // iframe
     let iframe = document.createElement("iframe");
 
-    setTimeout(() => {
-        document.body.appendChild(iframe)
-        iframe.src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`
-    }, 1000)
+    // setTimeout(() => {
+    //     document.body.appendChild(iframe)
+    //     iframe.src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`
+    // }, 1000)
 
-    return;
+    // return;
     const EXEC_ELEMENT_ID = `ecInvoiceExec`;
+    const EXEC_YEAR_PRODUCT_LIST_ID = `ecYearProductListExec`;
     // オーダーページなので、デジタル以外
     // 動作用フィールドを挿入する
     // todo 動的にページが更新されるので、以降はbodyの更新タイミングで挿入ノードが生きているか監視
@@ -54,7 +55,41 @@ function amazonOrderPage() {
 
     function addEvent() {
         let ev = createList;
+        let changeEv = createYearList
         document.body.addEventListener("click", ev);
+        document.body.addEventListener("change", changeEv);
+    }
+
+    async function createYearList(event) {
+        let target = event.target.closest(`#${EXEC_YEAR_PRODUCT_LIST_ID}`);
+        if (!target) return
+        let year = target.value;
+        if (!year) return;
+        console.log(event);
+        year = year.trim().replaceAll(/[^0-9]/ig, "")
+        // まず、1ページ目を取得
+        // 1ページ目の戻りで最後のページデータを取得
+        // ページデータ取得後、2ページ目以降のアクセス用URLをリストで生成
+        // iframe で平行処理
+        let lastIndex = 40;
+        console.log(createAccessURLs(year, lastIndex))
+
+    }
+
+    function createAccessURLs(year = "", lastIndex = 1) {
+        let urls = []
+        for (let i = 1; i < lastIndex; i++) {
+            urls.push(createAccessURL(year, i))
+        }
+        return urls;
+    }
+
+    function createAccessURL(year = "", page = 0) {
+        let baseURL = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-${year}&search=`
+        if (page) {
+            baseURL += `startIndex=${page * 10}`
+        }
+        return baseURL
     }
 
     async function createList(event) {
@@ -121,14 +156,36 @@ function amazonOrderPage() {
         return location.pathname.match('/gp/your-account/order-history')
     }
 
+    function nowLastYearList() {
+        let select = document.getElementById(`orderFilter`).cloneNode(true);
+        let filterd = select.querySelectorAll(`[value^="year-"]`)
+        filterd.forEach(e=>e.removeAttribute("selected"))
+        return [filterd[0], filterd[1]];
+    }
+
     function createControlFieldElem() {
         let tmp = document.createElement("div")
+        let select = document.createElement("select");
+        select.id = EXEC_YEAR_PRODUCT_LIST_ID
+        select.innerHTML = `<option value="">選択してください</option>`
+        nowLastYearList().forEach(op => select.appendChild(op));
+        select.value="";
+        let wrap = tmp.cloneNode();
+        wrap.innerHTML = `<span>表示する年を選択：</span>`
+        wrap.appendChild(select);
         tmp.innerHTML = `
         <div>
-        <button id="${EXEC_ELEMENT_ID}">
-        領収書データを作る
-        </button></div>
+        <div style="display: flex;gap: .5em">
+            <div>
+               ${wrap.innerHTML}
+            </div>
+            <button id="${EXEC_ELEMENT_ID}">
+            ページに表示された注文情報の領収書データを作る
+            </button>
+        </div>
+        </div>
         `;
+
         return tmp.children[0];
     }
 
