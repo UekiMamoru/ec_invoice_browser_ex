@@ -16,8 +16,9 @@
   },
   "permissions": [
     "storage",
+    "debugger",
     "downloads",
-    "tabs"
+    "unlimitedStorage"
   ],
   "background": {
     "service_worker": "/js/worker.js"
@@ -25,10 +26,24 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.amazon.co.jp/*"],
-      "js": ["/js/content.js"],
-      "css": ["/css/style.css"],
+        "https://*.amazon.co.jp/*"
+      ],
+      "js": [
+        "/js/content.js"
+      ],
+      "css": [
+        "/css/style.css"
+      ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.amazon.co.jp/*"
+      ],
+      "all_frames": true,
+      "js": [
+        "/js/amazon/frame.js"
+      ]
     }
   ],
   "web_accessible_resources": [
@@ -41,7 +56,8 @@
         "/templates/*"
       ],
       "matches": [
-        "https://*.amazon.co.jp/*"]
+        "https://*.amazon.co.jp/*"
+      ]
     }
   ],
   "options_page": "/option/index.html"

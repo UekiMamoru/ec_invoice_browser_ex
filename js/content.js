@@ -6,15 +6,44 @@
     <i className="a-icon a-icon-popover"></i></a>
 </span>
  */
-amazonOrderPage()
 const AMAZON_EC_NAME = "amazon"
+amazonOrderPage()
 
 function amazonOrderPage() {
 
     if (!isOrderPage()) {
         return;
     }
+    let src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`;
+    window.addEventListener(
+        "message",
+        (event) => {
+            if (event.data.hasOwnProperty("href") && event.data.href.replace(location.origin, "") === src) {
+                if (event.data.state) {
 
+                    // 取得データ
+                    let parser = new DOMParser();
+                    let node = parser.parseFromString(event.data.nodeStr, "text/html")
+                    let list = Array.from(node.querySelectorAll(".order.js-order-card"))
+                    let container = document.getElementById("ordersContainer");
+                    let cards = container.querySelectorAll(".js-order-card")
+                    let card = cards[cards.length - 1];
+                    if(list.length)card.after(...list)
+                }
+            }
+        },
+        false,
+    );
+    // 1000秒後にiframeで注文ぺージを開く
+    // iframe
+    let iframe = document.createElement("iframe");
+
+    setTimeout(() => {
+        document.body.appendChild(iframe)
+        iframe.src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`
+    }, 1000)
+
+    return;
     const EXEC_ELEMENT_ID = `ecInvoiceExec`;
     // オーダーページなので、デジタル以外
     // 動作用フィールドを挿入する
@@ -70,13 +99,14 @@ function amazonOrderPage() {
                         type: "set-ec-pdf-data",
                         pdfStr
                     };
-                    chrome.runtime.sendMessage(sendVal, () => {})
+                    chrome.runtime.sendMessage(sendVal, () => {
+                    })
                     // console.log(serializable)
                 }
             }
-            if(pdfArrayBuffer) {
+            if (pdfArrayBuffer) {
                 downloadPDF(pdfArrayBuffer, fileName);
-            }else{
+            } else {
                 // 何らかのエラーでpdfArrayBufferが作れなかった
             }
         }
