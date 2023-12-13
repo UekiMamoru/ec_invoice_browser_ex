@@ -54,7 +54,7 @@ function amazonOrderPage() {
         // 1ページ目の戻りで最後のページデータを取得
         // ページデータ取得後、2ページ目以降のアクセス用URLをリストで生成
         // iframe で平行処理
-
+        return;
 
         // 1ページ目のデータ取得用URL生成
         let src = `/gp/your-account/order-history?orderFilter=year-${year}`;
@@ -131,10 +131,10 @@ function amazonOrderPage() {
                     // 開いたフレームの削除
                     document.body.removeChild(firstFrame);
                     // ページネーションが存在しない可能性があるので、例外処理
-                    try{
+                    try {
                         // ページを移動しない様にページネーションをhide
                         document.querySelector(".a-pagination").style.display = "none";
-                    }catch (e){
+                    } catch (e) {
 
                     }
                     // lastIndexからURLを生成してコールバック呼び出し
@@ -178,112 +178,134 @@ function amazonOrderPage() {
         if (!event.target.closest(`#${EXEC_ELEMENT_ID}`)) return
         // デジタル以外を取得
         let list = filterNonDigitalOrders();
-        // await list.forEach(async (data) => {
-        let data = list.shift();
-        if (data) {
-            let fileName = `amazon_${data.date}_${data.no}`
-            // todo 当該注文番号に紐づくシリアライズしたデータがあるかチェック
-            let getVal = {
-                ecName: AMAZON_EC_NAME,
-                orderNumber: data.no,
-                type: "get-ec-pdf-data",
+        for (const data of list) {
+            if (data) {
+                let fileName = `amazon_${data.date}_${data.no}`
+                let isInvoice = false;
+                // todo 当該注文番号に紐づくシリアライズしたデータがあるかチェック
+                let getVal = {
+                    ecName: AMAZON_EC_NAME,
+                    orderNumber: data.no,
+                    type: "get-ec-pdf-data",
 
-            }
-            let result = await chrome.runtime.sendMessage(getVal);
-            // 既にあったので、既存データで作成
-            let pdfArrayBuffer;
-            if (result.state) {
-                let pdfStr = result.data.pdfStr;
-                pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr)
-            } else {
-                let url = `https://www.amazon.co.jp${data.invoiceData.url}`;
-                // urlをフェッチリクエストしてPDFリンクを生成
-                let res = await fetch(url);
-                let text = await res.text();
-                let parser = new DOMParser();
-                let target = parser.parseFromString(text, "text/html")
-                    .querySelector(`.invoice-list a[href$="invoice.pdf"]`);
-                // invoice.pdfで判定するが、複数あるケースやインボイスでない場合がある
-                /**
-                 * <ul class="a-unordered-list a-vertical invoice-list a-nowrap">
-                 *     <li><span class="a-list-item">
-                 *         <a class="a-link-normal" href="/documents/download/b62c4b4e-5338-4ab9-8358-ce73b3978302/invoice.pdf">
-                 *             支払い明細書 1
-                 *         </a>
-                 *     </span></li>
-                 *     <li><span class="a-list-item">
-                 *         <a class="a-link-normal" href="/gp/help/contact/contact.html/ref=oh_aui_ajax_request_invoice?ie=UTF8&amp;orderID=250-4129616-1192621&amp;sellerID=A1NLN7B5GTL0T6&amp;subject=30">
-                 *             請求書をリクエスト
-                 *         </a>
-                 *     </span></li>
-                 *     <li><span class="a-list-item">
-                 *         <a class="a-link-normal" href="/gp/css/summary/print.html/ref=oh_aui_ajax_invoice?ie=UTF8&amp;orderID=250-4129616-1192621">
-                 *             領収書／購入明細書
-                 *         </a>
-                 *     </span></li>
-                 * </ul>
-                 */
-                // 請求書をリクエストのテキストがある場合は適格者の物ではない、この場合はオーダーIDで引っ張る
-                //
-                //
-                // 複数あるケース
-                /*
-                <ul class="a-unordered-list a-vertical invoice-list a-nowrap">
-    <li><span class="a-list-item">
-        <a class="a-link-normal" href="/documents/download/904878fd-1644-474c-a804-99a766097133/invoice.pdf">
-            支払い明細書 1
-        </a>
-    </span></li>
-    <li><span class="a-list-item">
-        <a class="a-link-normal" href="/documents/download/f4f29d4e-7604-4650-aa67-07b348c15db4/invoice.pdf">
-            支払い明細書 2
-        </a>
-    </span></li>
-    <li><span class="a-list-item">
-        <a class="a-link-normal" href="/documents/download/26e3893b-8acc-4dce-ba8c-56e8eaf7ba45/invoice.pdf">
-            支払い明細書 3
-        </a>
-    </span></li>
-    <li><span class="a-list-item">
-        <a class="a-link-normal" href="/gp/css/summary/print.html/ref=oh_aui_ajax_invoice?ie=UTF8&amp;orderID=250-0400874-3412639">
-            領収書／購入明細書
-        </a>
-    </span></li>
-</ul>
-                 */
-
-
-                if (target) {
-                    let pdfURL = target.href;
-                    pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
-                    // stringへ変換
-                    let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
-
-                    let sendVal = {
-                        ecName: AMAZON_EC_NAME,
-                        orderNumber: data.no,
-                        type: "set-ec-pdf-data",
-                        pdfStr
-                    };
-                    chrome.runtime.sendMessage(sendVal, () => {
-                    })
-                    // console.log(serializable)
+                }
+                let result = await chrome.runtime.sendMessage(getVal);
+                // 既にあったので、既存データで作成
+                let pdfArrayBuffer;
+                if (result.state) {
+                    let pdfStr = result.data.pdfStr;
+                    fileName = `tmp_${result.data.fileName}`;
+                    pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr)
                 } else {
-                    // todo .pdfで終わるものが無かったので、ここはエラーを保持して警告出す
-                    // 会計処理終わってないケース
-                    // <a class="a-link-normal" hrclassNamegp/help/customer/display.html/ref=oh_aui_ajax_legal_invoice_help?ie=UTF8&amp;nodeId=201986650">
-                    //             領収書／購入明細書がご利用になれません。くわしくはこちら。
-                    //         </a>
+                    let url = `https://www.amazon.co.jp${data.invoiceData.url}`;
+                    // urlをフェッチリクエストしてPDFリンクを生成
+                    let res = await fetch(url);
+                    let text = await res.text();
+                    let parser = new DOMParser();
+                    let invoiceLinkNode = parser.parseFromString(text, "text/html");
+                    let target = invoiceLinkNode.querySelector(`.invoice-list a[href$="invoice.pdf"]`);
+                    // invoice.pdfで判定するが、複数あるケースやインボイスでない場合がある
+                    /**
+                     * <ul class="a-unordered-list a-vertical invoice-list a-nowrap">
+                     *     <li><span class="a-list-item">
+                     *         <a class="a-link-normal" href="/documents/download/b62c4b4e-5338-4ab9-8358-ce73b3978302/invoice.pdf">
+                     *             支払い明細書 1
+                     *         </a>
+                     *     </span></li>
+                     *     <li><span class="a-list-item">
+                     *         <a class="a-link-normal" href="/gp/help/contact/contact.html/ref=oh_aui_ajax_request_invoice?ie=UTF8&amp;orderID=250-4129616-1192621&amp;sellerID=A1NLN7B5GTL0T6&amp;subject=30">
+                     *             請求書をリクエスト
+                     *         </a>
+                     *     </span></li>
+                     *     <li><span class="a-list-item">
+                     *         <a class="a-link-normal" href="/gp/css/summary/print.html/ref=oh_aui_ajax_invoice?ie=UTF8&amp;orderID=250-4129616-1192621">
+                     *             領収書／購入明細書
+                     *         </a>
+                     *     </span></li>
+                     * </ul>
+                     */
+                    // 請求書をリクエストのテキストがある場合は適格者の物ではない、この場合はオーダーIDで引っ張る
+                    //
+                    //
+                    // 複数あるケース
+                    /*
+                    <ul class="a-unordered-list a-vertical invoice-list a-nowrap">
+        <li><span class="a-list-item">
+            <a class="a-link-normal" href="/documents/download/904878fd-1644-474c-a804-99a766097133/invoice.pdf">
+                支払い明細書 1
+            </a>
+        </span></li>
+        <li><span class="a-list-item">
+            <a class="a-link-normal" href="/documents/download/f4f29d4e-7604-4650-aa67-07b348c15db4/invoice.pdf">
+                支払い明細書 2
+            </a>
+        </span></li>
+        <li><span class="a-list-item">
+            <a class="a-link-normal" href="/documents/download/26e3893b-8acc-4dce-ba8c-56e8eaf7ba45/invoice.pdf">
+                支払い明細書 3
+            </a>
+        </span></li>
+        <li><span class="a-list-item">
+            <a class="a-link-normal" href="/gp/css/summary/print.html/ref=oh_aui_ajax_invoice?ie=UTF8&amp;orderID=250-0400874-3412639">
+                領収書／購入明細書
+            </a>
+        </span></li>
+    </ul>
+                     */
+
+
+                    if (target) {
+                        // もし、「請求書をリクエスト」が存在したら、適格領収書ではない
+                        if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
+                            // 発見したので適格領収書ではない
+                            fileName = `[no_invoice_number]_${fileName}`
+                            isInvoice = false;
+                        } else {
+                            isInvoice = true;
+                        }
+                        let pdfURL = target.href;
+                        pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
+                        // stringへ変換
+                        let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
+                        let sendVal = {
+                            ecName: AMAZON_EC_NAME,
+                            orderNumber: data.no,
+                            type: "set-ec-pdf-data",
+                            pdfStr,
+                            fileName,
+                            isInvoice
+                        };
+                        chrome.runtime.sendMessage(sendVal, () => {
+                        })
+                        // console.log(serializable)
+                    } else {
+                        // todo .pdfで終わるものが無かったので、ここはエラーを保持して警告出す
+                        // 会計処理終わってないケース
+                        // <a class="a-link-normal" hrclassNamegp/help/customer/display.html/ref=oh_aui_ajax_legal_invoice_help?ie=UTF8&amp;nodeId=201986650">
+                        //             領収書／購入明細書がご利用になれません。くわしくはこちら。
+                        //         </a>
+
+
+                    }
+                }
+                if (pdfArrayBuffer) {
+                    downloadPDF(pdfArrayBuffer, fileName);
+                } else {
+                    // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
 
                 }
             }
-            if (pdfArrayBuffer) {
-                downloadPDF(pdfArrayBuffer, fileName);
-            } else {
-                // 何らかのエラーでpdfArrayBufferが作れなかった
-            }
+            await sleep(500);
         }
-        // })
+    }
+
+    async function sleep(milSec = 1000) {
+        return new Promise(resolve => {
+
+            setTimeout(() => {
+                resolve()
+            }, milSec)
+        })
     }
 
     function getInsertTarget() {
@@ -330,7 +352,8 @@ function amazonOrderPage() {
     }
 
     function filterNonDigitalOrders() {
-        let orderNodes = document.querySelectorAll(`.js-order-card`);
+        let orderNodes = Array.from(document.querySelectorAll(`.js-order-card`))
+            .filter(e=>!e.parentElement.classList.contains(`js-order-card`));
         /**
          *
          * @type {{date: string, invoiceData: {}, no: string, price: {total: string}, title: string}[]}

@@ -1,7 +1,7 @@
 const EC_KEY_PREFIX = "ec_"
 chrome.runtime.onMessage.addListener(
     (message, sender, callback) => {
-        if (message.hasOwnProperty("type")&& message.type==="get-ec-pdf-data") {
+        if (message.hasOwnProperty("type") && message.type === "get-ec-pdf-data") {
             let ecName = message.ecName;
             let key = `${EC_KEY_PREFIX}${ecName}`;
             let list = [key];
@@ -19,19 +19,22 @@ chrome.runtime.onMessage.addListener(
                 }
                 callback(resultData);
             });
-        } else if (message.hasOwnProperty("type")&& message.type==="set-ec-pdf-data") {
+        } else if (message.hasOwnProperty("type") && message.type === "set-ec-pdf-data") {
             let ecName = message.ecName;
             let key = `${EC_KEY_PREFIX}${ecName}`;
             let list = [key];
             let orderNumber = message.orderNumber
             let pdfStr = message.pdfStr;
+            let fileName = message.fileName;
+            let isInvoice = message.isInvoice;
             chrome.storage.local.get(list, (result) => {
                 let data = result[key];
                 // もしデータがなければ配列にする
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = {pdfStr}
+
+                data[orderNumber] = {pdfStr, fileName,isInvoice}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })
