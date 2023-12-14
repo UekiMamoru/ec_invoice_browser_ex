@@ -31,7 +31,8 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 // オフスクリーンを開く
 
-let creating ;
+let creating;
+
 async function setupOffscreenDocument(path) {
     // Check all windows controlled by the service worker to see if one
     // of them is the offscreen document with the given path
@@ -52,7 +53,7 @@ async function setupOffscreenDocument(path) {
         creating = chrome.offscreen.createDocument({
             url: path,
             // reasons: ['CLIPBOARD'],
-            reasons: ['BLOBS', "DOM_SCRAPING", "DOM_PARSER","WORKERS","LOCAL_STORAGE"],
+            reasons: ['BLOBS', "DOM_SCRAPING", "DOM_PARSER", "WORKERS", "LOCAL_STORAGE"],
             justification: 'reason for needing the document',
         });
         await creating;
@@ -61,7 +62,7 @@ async function setupOffscreenDocument(path) {
 }
 
 
-setupOffscreenDocument( 'offscreen/offscreen.html');
+setupOffscreenDocument('offscreen/offscreen.html');
 chrome.runtime.onMessage.addListener(
     (message, sender, callback) => {
         if (message.hasOwnProperty("type") && message.type === "get-ec-pdf-data") {
@@ -115,6 +116,11 @@ chrome.runtime.onMessage.addListener(
                     )
                 }
             )
+        } else if (message.hasOwnProperty("type") && message.type === "pdf-decode") {
+            let offscreenMessage = {type: `offscreen-pdf-decode`, pdfStr: message.pdfStr};
+            chrome.runtime.sendMessage(offscreenMessage, (result) => {
+                callback(result);
+            })
         }
 
         return true;

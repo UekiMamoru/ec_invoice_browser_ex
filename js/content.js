@@ -222,7 +222,8 @@ function amazonOrderPage() {
             qualifiedInvoiceReason: param.qualifiedInvoiceReason,
             sellerContactURL: param.sellerContactURL,
             sellerURL: param.sellerURL,
-            isCachePDF: param.isCachePDF
+            isCachePDF: param.isCachePDF,
+            invoiceId : param.invoiceId
 
         }
         return output;
@@ -231,7 +232,7 @@ function amazonOrderPage() {
     async function createList(event) {
         if (!event.target.closest(`#${EXEC_ELEMENT_ID}`)) return
 
-        let isPdfGetAndDownload = document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
+        let isPdfGetAndDownload =true;// document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
         let pdfGetAndDownloadMsg = `PDF取得とダウンロードを同時に行います`
         if (!isPdfGetAndDownload) {
             pdfGetAndDownloadMsg = `PDF取得のみ行います`
@@ -261,6 +262,7 @@ function amazonOrderPage() {
                     sellerContactURL: "",
                     sellerURL: "",
                     isCachePDF: false,
+                    invoiceId: ""
                 }
                 let result = await chrome.runtime.sendMessage(getVal);
                 // 既にあったので、既存データで作成
@@ -332,18 +334,13 @@ function amazonOrderPage() {
 
                     if (target.length) {
 
-                        // もし、「請求書をリクエスト」が存在したら、適格領収書ではない
+                        // もし、「請求書をリクエスト」が存在したら、適格領収書ではない可能性あり
                         if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
                             // 発見したので適格領収書ではない可能性があるがこの時点では特定できない
-                            fileName = `_${fileName}`
+                            // fileName = `_${fileName}`
                             param.sellerContactURL = invoiceLinkNode.body.querySelector(`[href*="help/contact/contact.html"]`).href;
-                            isInvoice = false;
-                            exportUserLogMsg(`PDFは適格領収書ではないかもしれません`)
-                        } else {
-                            isInvoice = true;
-                            exportUserLogMsg(`PDFは適格領収書のようです`)
-
-
+                            // isInvoice = false;
+                            // exportUserLogMsg(`PDFは適格領収書ではないかもしれません`)
                         }
                         let pdfURL = target.shift().href;
                         try {
@@ -356,6 +353,29 @@ function amazonOrderPage() {
                             // // stringへ変換
                             let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
                             pdfStrs.push(pdfStr);
+
+                            // 取得したPDFデータを解析
+                            let decodeCheck = {
+                                type: `pdf-decode`
+                                , pdfStr
+                            }
+                            exportUserLogMsg(`PDF情報を解析します`)
+                            /**
+                             * @type {{ type: string,invoiceId: string,isInvoice: boolean }}
+                             */
+                            let pdfResult = await chrome.runtime.sendMessage(
+                                decodeCheck
+                            )
+                            exportUserLogMsg(`PDF情報を解析が終了しました`)
+                            console.log(pdfResult);
+                            exportUserLogMsg(`PDF情報をキャッシュします`)
+                            let id = data.no
+
+                            // PDF自体は作れてる
+                            param.isCreateInvoicePDF = true;
+                            param.isQualifiedInvoice = pdfResult.isInvoice;//isInvoice;
+                            param.qualifiedInvoiceReason = "作成";
+                            param.invoiceId = pdfResult.invoiceId
                             let sendVal = {
                                 ecName: AMAZON_EC_NAME,
                                 orderNumber: data.no,
@@ -365,16 +385,10 @@ function amazonOrderPage() {
                                 isInvoice,
                                 param
                             };
-                            exportUserLogMsg(`PDF情報をキャッシュします`)
-                            let id = data.no
                             chrome.runtime.sendMessage(sendVal, () => {
                                 exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
                             })
 
-                            // PDF自体は作れる
-                            param.isCreateInvoicePDF = true;
-                            param.isQualifiedInvoice = isInvoice;
-                            param.qualifiedInvoiceReason = "作成";
                         } catch (e) {
                             // PDF自体はあったが、制作過程で何らかのエラーが生じ作れなかった
                             exportUserLogMsg(`PDF情報取得時にエラーが発生し取得できませんでした。`)
@@ -391,9 +405,9 @@ function amazonOrderPage() {
                         let target = Array.from(invoiceLinkNode.querySelectorAll("a"))
                             .find(a => a.textContent.indexOf("領収書／購入明細書がご利用になれません。") !== -1)
                         if (target) {
-                            param.qualifiedInvoiceReason = `未発送・会計処理が終了していない注文です。`
+                            param.qualifiedInvoiceReason = `未発送・会計処理未済の注文もしくは、電子マネーの注文`
                         } else {
-                            param.qualifiedInvoiceReason = `領収書の発行しか出来ず、適格請求書・支払い明細が取得できない注文です。`
+                            param.qualifiedInvoiceReason = `領収書の発行しか出来ず、適格請求書・支払い明細が取得できない注文`
                         }
                         exportUserLogMsg(`${param.qualifiedInvoiceReason}`)
                     }
@@ -478,7 +492,7 @@ function amazonOrderPage() {
                 <label><input type="checkbox" id="${INCLUDE_DIGITAL_CHOICE_ID}">デジタルを含める</label>
                 </div>
                 <div>
-                <label><input type="checkbox" id="${PDF_GET_AND_DOWNLOAD_CHOICE_ID}" checked="checked">PDF取得とダウンロードを同時に行う</label>
+<!--                <label><input type="checkbox" id="${PDF_GET_AND_DOWNLOAD_CHOICE_ID}" checked="checked">PDF取得とダウンロードを同時に行う</label>-->
                 </div>
             </div>
             <div style="border: inset 2px #ccc">
@@ -579,7 +593,6 @@ async function getPDFArrayBuffer(
     let arrayBuff = await res.arrayBuffer();
     return arrayBuff;
 }
-
 
 
 function arrayBufferToStringSerializable(arrayBuff) {

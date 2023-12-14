@@ -16,7 +16,7 @@ module.exports = {
         path: path.resolve(__dirname, './js/'),
         // //出力先のファイル名
         // filename: 'contents_script.js'
-        publicPath: "chrome-extension://lkfnndikpoohannechljejlpbeigpmpo/js/"
+        // publicPath: "chrome-extension://epmlcnekeghifeojgdkkcodlgalkegdk/js/"
     },
 
 };

@@ -15,9 +15,16 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([pdfj
 pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
 
-d()
+chrome.runtime.onMessage.addListener((message, p, callback) => {
+    if (message.type === "offscreen-pdf-decode") {
+        getPDFTypeNum(message.pdfStr).then((result) => {
+            callback(result);
+        })
+    }
+    return true;
+})
 
-async function d() {
+async function getPDFTypeNum(pdfStr = "") {
     let url = chrome.runtime.getURL('js/vendors-node_modules_pdfjs-dist_build_pdf_worker_mjs.js');
     pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__.GlobalWorkerOptions.workerSrc = url
 
@@ -28,79 +35,77 @@ async function d() {
         type: "get-ec-pdf-data",
 
     }
-    let result = await chrome.runtime.sendMessage(getVal);
-    let arrayBuff = arrayBuffSerializableStringToArrayBuff(result.data.pdfStrs[0])
+    let arrayBuff = arrayBuffSerializableStringToArrayBuff(pdfStr)
 
-
-    var loadingTask = pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__.getDocument(arrayBuff);
+    let loadingTask = pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__.getDocument(arrayBuff);
     let pdf = await loadingTask.promise
     console.log('PDF loaded');
 
     // Fetch the first page
-    var pageNumber = 1;
+    let pageNumber = 1;
     let page = await pdf.getPage(pageNumber)
     console.log('Page loaded');
 
-    var scale = 1.5;
-    var viewport = page.getViewport({scale: scale});
+    let scale = 1.5;
+    let viewport = page.getViewport({scale: scale});
 
     // Prepare canvas using PDF page dimensions
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
     canvas.height = viewport.height;
     canvas.width = viewport.width;
     // canvas
     // Render PDF page into canvas context
-    var renderContext = {
+    let renderContext = {
         canvasContext: context,
         viewport: viewport
     };
-    var renderTask = page.render(renderContext);
+    let renderTask = page.render(renderContext);
     // renderTask.promise.then(function () {
     //     console.log('Page rendered');
     await sleep(300)
-    page.getTextContent().then(
-        (v) => {
-            let items = v.items;
-            console.log(items[0].str.match("適格請求書"))
-            let target = items.find(d => {
-                return d.str.match("登録番号: T")
-            })
-            console.log(target)
-            canvas.height = 0;
-            canvas.width = 0;
-            canvas.remove();
-            // delete context;
-            // delete canvas;
-        }
-    )
+    let v = await page.getTextContent();
+    let items = v.items;
+    console.log(items[0].str.match("適格請求書"))
+    let target = items.find(d => {
+        return d.str.match("登録番号: T")
+    })
+    console.log(target)
+    let pdfData = {
+        type: items[0].str.trim(),
+        invoiceId: target ? target.str.trim() : "",
+        isInvoice: false
+    }
+    pdfData.isInvoice = Boolean(pdfData.type.match("適格"));
+    canvas.height = 0;
+    canvas.width = 0;
+    canvas.remove();
+    return pdfData;
 
-    // }).catch(ee=>{
-    //     console.log(ee)
-    // });
+}
 
 
-    function arrayBuffSerializableStringToArrayBuff(str) {
-        const newArrayBuffer = base64ToArrayBuffer(str);
-        return newArrayBuffer;
+function arrayBuffSerializableStringToArrayBuff(str) {
+    const newArrayBuffer = base64ToArrayBuffer(str);
+    return newArrayBuffer;
+}
+
+function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
     }
 
-    function base64ToArrayBuffer(base64) {
-        const binaryString = window.atob(base64);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
+    return bytes.buffer;
+}
 
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        return bytes.buffer;
-    }
-    async function sleep(milSec = 1000){
-        return new Promise(resolve => {
-            setTimeout(()=>resolve(),milSec)
-        })
-    }
+async function sleep(milSec = 1000) {
+    return new Promise(resolve => {
+        setTimeout(() => resolve(), milSec)
+    })
 }
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -17775,6 +17780,18 @@ __webpack_async_result__();
 /******/ 		};
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
@@ -17793,7 +17810,25 @@ __webpack_async_result__();
 /******/ 	
 /******/ 	/* webpack/runtime/publicPath */
 /******/ 	(() => {
-/******/ 		__webpack_require__.p = "chrome-extension://lkfnndikpoohannechljejlpbeigpmpo/js/";
+/******/ 		var scriptUrl;
+/******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
+/******/ 		var document = __webpack_require__.g.document;
+/******/ 		if (!scriptUrl && document) {
+/******/ 			if (document.currentScript)
+/******/ 				scriptUrl = document.currentScript.src;
+/******/ 			if (!scriptUrl) {
+/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				if(scripts.length) {
+/******/ 					var i = scripts.length - 1;
+/******/ 					while (i > -1 && !scriptUrl) scriptUrl = scripts[i--].src;
+/******/ 				}
+/******/ 			}
+/******/ 		}
+/******/ 		// When supporting browsers where an automatic publicPath is not supported you must specify an output.publicPath manually via configuration
+/******/ 		// or pass an empty string ("") and set the __webpack_public_path__ variable from your code to use your own logic.
+/******/ 		if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this browser");
+/******/ 		scriptUrl = scriptUrl.replace(/#.*$/, "").replace(/\?.*$/, "").replace(/\/[^\/]+$/, "/");
+/******/ 		__webpack_require__.p = scriptUrl;
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/jsonp chunk loading */

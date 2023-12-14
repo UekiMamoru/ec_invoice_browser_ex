@@ -47,7 +47,7 @@
 
         /**
          *
-         * @param resultData{{date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean}}
+         * @param resultData{{date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
          * @param idx integer
          */
         function createRow(resultData, idx = 0) {
@@ -62,12 +62,23 @@
             <td>${resultData.isMultipleOrder ? "multiple" : "-"}</td>
             <td>${qualifiedInvoiceCell(resultData)}</td>
             <td>${resultData.isCreateInvoicePDF}</td>
-            <td>${resultData.isQualifiedInvoice ? "<a >適格DL</a>" : ""}</td>
-            <td>${resultData.isQualifiedInvoice === false && resultData.isCreateInvoicePDF ? "<a>明細DL</a></p>" : ""}
+            <td>${createQualifiedInvoiceField(resultData)}</td>
+            <td>${resultData.isQualifiedInvoice === false && resultData.isCreateInvoicePDF ? "<a>支払い明細DL</a></p>" : ""}
             ${createSellerContactURL(resultData.sellerContactURL)}
             </td>
             <td>${resultData.isCachePDF}</td>
             </tr>
+            `
+        }
+        function createQualifiedInvoiceField(resultData){
+            let invoiceId = resultData.invoiceId;
+            let invoiceIdHTML = ``
+            if(invoiceId){
+                invoiceIdHTML = `<p>${invoiceId}</p>`
+            }
+            return `
+            ${resultData.isQualifiedInvoice ? "<a >適格領収書DL</a>" : ""}
+            ${invoiceIdHTML}
             `
         }
         function createSellerContactURL(url){
