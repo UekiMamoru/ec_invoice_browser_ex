@@ -2,6 +2,8 @@ const EC_KEY_PREFIX = "ec_"
 // バージョンが古い場合でフラッシュ
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === "update") {
+        // とりあえずバージョンアップ時は削除
+        flush();
         // 以前のバージョンを取得
         const previousVersion = details.previousVersion;
 
@@ -10,16 +12,20 @@ chrome.runtime.onInstalled.addListener((details) => {
 
         // バージョンが0.0.1から0.0.2にアップデートされたかを確認
         if (previousVersion === "0.0.2" && currentVersion === "0.0.3") {
-            // 特定のアップデート処理を実行
-            chrome.storage.local.clear(function() {
-                var error = chrome.runtime.lastError;
-                if (error) {
-                    console.error(error);
-                } else {
-                    console.log("All data cleared from local storage.");
-                }
-            });
+
         }
+    }
+
+    function flush() {
+        // 特定のアップデート処理を実行
+        chrome.storage.local.clear(function () {
+            var error = chrome.runtime.lastError;
+            if (error) {
+                console.error(error);
+            } else {
+                console.log("All data cleared from local storage.");
+            }
+        });
     }
 });
 chrome.runtime.onMessage.addListener(
