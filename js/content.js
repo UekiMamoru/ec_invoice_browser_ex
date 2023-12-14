@@ -14,20 +14,13 @@ function amazonOrderPage() {
     if (!isOrderPage()) {
         return;
     }
-    let src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`;
-
-    // 1000秒後にiframeで注文ぺージを開く
-    // iframe
-    let iframe = document.createElement("iframe");
-
-    // setTimeout(() => {
-    //     document.body.appendChild(iframe)
-    //     iframe.src = `/gp/your-account/order-history/ref=ppx_yo_dt_b_pagination_1_2?ie=UTF8&orderFilter=year-2023&search=&startIndex=10`
-    // }, 1000)
-
-    // return;
     const EXEC_ELEMENT_ID = `ecInvoiceExec`;
     const EXEC_YEAR_PRODUCT_LIST_ID = `ecYearProductListExec`;
+    const INCLUDE_DIGITAL_CHOICE_ID = `ecDigitalChoice`;
+    const LOG_MESSAGE_FIELD = `ecLogMsgField`;
+    const PDF_GET_AND_DOWNLOAD_CHOICE_ID  =`ecPdfGetAndDownload`;
+    let includeDigital = false;
+    let activeCreateList = false;
     // オーダーページなので、デジタル以外
     // 動作用フィールドを挿入する
     // todo 動的にページが更新されるので、以降はbodyの更新タイミングで挿入ノードが生きているか監視
@@ -37,15 +30,51 @@ function amazonOrderPage() {
     addEvent();
 
     function addEvent() {
-        let ev = createList;
-        let changeEv = createYearList
+        let ev = clickEvFunc;
+        let changeEv = changeEvFunc
         document.body.addEventListener("click", ev);
         document.body.addEventListener("change", changeEv);
     }
 
+    async function clickEvFunc(event) {
+
+        let target
+            = event.target.closest(`#${EXEC_ELEMENT_ID}`);
+        if (target) {
+            // イベント進行中は捨てる
+            if (activeCreateList) return;
+            target.setAttribute("disabled","disbled")
+            activeCreateList = true;
+            return createList(event).then(() => {
+
+            }).finally(() => {
+                activeCreateList = false;
+                target.removeAttribute("disabled")
+            })
+        }
+    }
+
+    async function changeEvFunc(event) {
+
+        let target
+            = event.target.closest(`#${EXEC_YEAR_PRODUCT_LIST_ID}`);
+        if (target) {
+            return createYearList(event)
+        }
+
+        target = event.target.closest(`#${INCLUDE_DIGITAL_CHOICE_ID}`)
+        if (target) {
+            return changeDigitalChoice(event)
+        }
+    }
+
+    async function changeDigitalChoice(event) {
+        let target = event.target.closest(`#${INCLUDE_DIGITAL_CHOICE_ID}`)
+        includeDigital = target.checked;
+    }
+
     async function createYearList(event) {
         let target = event.target.closest(`#${EXEC_YEAR_PRODUCT_LIST_ID}`);
-        if (!target) return
         let year = target.value;
         if (!year) return;
         console.log(event);
@@ -174,12 +203,48 @@ function amazonOrderPage() {
         return baseURL
     }
 
+    /**
+     *
+     * @param orderObj
+     * @param param
+     * @returns {{date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean}}
+     */
+    function createOrderOutputObject(orderObj, param) {
+        let output = {
+            orderNumber: orderObj.no,
+            date: orderObj.date,
+            price: orderObj.price.total,
+            isDigital: orderObj.isDigital,
+            productDataList: orderObj.title,
+            isMultipleOrder: orderObj.title.length > 1,
+            isQualifiedInvoice: param.isQualifiedInvoice,
+            isCreateInvoicePDF: param.isCreateInvoicePDF,
+            qualifiedInvoiceReason: param.qualifiedInvoiceReason,
+            sellerContactURL: param.sellerContactURL,
+            sellerURL: param.sellerURL,
+            isCachePDF: param.isCachePDF
+
+        }
+        return output;
+    }
+
     async function createList(event) {
         if (!event.target.closest(`#${EXEC_ELEMENT_ID}`)) return
+
+        let isPdfGetAndDownload = document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
+        let pdfGetAndDownloadMsg  =`PDF取得とダウンロードを同時に行います`
+        if(!isPdfGetAndDownload){
+            pdfGetAndDownloadMsg  =`PDF取得のみ行います`
+        }
+        exportUserLogMsg(pdfGetAndDownloadMsg)
+        exportUserLogMsg(`デジタル${includeDigital ? "を含んだ" : "を含まない"}商品のデータを取得します...`)
         // デジタル以外を取得
-        let list = filterNonDigitalOrders();
+        let list = includeDigital ? createOrders() : filterNonDigitalOrders();
+        exportUserLogMsg(`対象は${list.length}件です`)
+        let resultOrderOutputs = [];
         for (const data of list) {
             if (data) {
+                exportUserLogMsg(`注文番号${data.no}の処理を開始します`)
                 let fileName = `amazon_${data.date}_${data.no}`
                 let isInvoice = false;
                 // todo 当該注文番号に紐づくシリアライズしたデータがあるかチェック
@@ -189,21 +254,32 @@ function amazonOrderPage() {
                     type: "get-ec-pdf-data",
 
                 }
+                let param = {
+                    isQualifiedInvoice: false,
+                    isCreateInvoicePDF: false,
+                    qualifiedInvoiceReason: "",
+                    sellerContactURL: "",
+                    sellerURL: "",
+                    isCachePDF: false,
+                }
                 let result = await chrome.runtime.sendMessage(getVal);
                 // 既にあったので、既存データで作成
                 let pdfArrayBuffer;
                 if (result.state) {
+                    exportUserLogMsg(`キャッシュに存在していたため、キャッシュデータを利用します。`)
                     let pdfStr = result.data.pdfStr;
                     fileName = `tmp_${result.data.fileName}`;
-                    pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr)
+                    pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr);
+                    param = result.data.param;
                 } else {
                     let url = `https://www.amazon.co.jp${data.invoiceData.url}`;
                     // urlをフェッチリクエストしてPDFリンクを生成
+                    exportUserLogMsg(`PDFが存在するか確認します...`)
                     let res = await fetch(url);
                     let text = await res.text();
                     let parser = new DOMParser();
                     let invoiceLinkNode = parser.parseFromString(text, "text/html");
-                    let target = invoiceLinkNode.querySelector(`.invoice-list a[href$="invoice.pdf"]`);
+                    let target = Array.from(invoiceLinkNode.querySelectorAll(`.invoice-list a[href$="invoice.pdf"]`));
                     // invoice.pdfで判定するが、複数あるケースやインボイスでない場合がある
                     /**
                      * <ul class="a-unordered-list a-vertical invoice-list a-nowrap">
@@ -254,49 +330,103 @@ function amazonOrderPage() {
                      */
 
 
-                    if (target) {
+                    if (target.length) {
+
                         // もし、「請求書をリクエスト」が存在したら、適格領収書ではない
                         if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
                             // 発見したので適格領収書ではない
                             fileName = `[no_invoice_number]_${fileName}`
+                            param.sellerContactURL = invoiceLinkNode.body.querySelector(`[href*="help/contact/contact.html"]`).href;
                             isInvoice = false;
+                            exportUserLogMsg(`PDFは適格領収書ではないようです`)
                         } else {
                             isInvoice = true;
+                            exportUserLogMsg(`PDFは適格領収書のようです`)
+
+
                         }
                         let pdfURL = target.href;
-                        pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
-                        // stringへ変換
-                        let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
-                        let sendVal = {
-                            ecName: AMAZON_EC_NAME,
-                            orderNumber: data.no,
-                            type: "set-ec-pdf-data",
-                            pdfStr,
-                            fileName,
-                            isInvoice
-                        };
-                        chrome.runtime.sendMessage(sendVal, () => {
-                        })
+                        try {
+                            let pdfStrs = []
+                            // PDF　URLが複数ある可能性があるので、リスト化する
+
+                            exportUserLogMsg(`PDF情報の取得を開始します`)
+                            pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
+                            exportUserLogMsg(`PDF情報を取得しました`)
+                            // // stringへ変換
+                            let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
+                            pdfStrs.push(pdfStr);
+                            let sendVal = {
+                                ecName: AMAZON_EC_NAME,
+                                orderNumber: data.no,
+                                type: "set-ec-pdf-data",
+                                pdfStrs,
+                                fileName,
+                                isInvoice,
+                                param
+                            };
+                            exportUserLogMsg(`PDF情報をキャッシュします`)
+                            let id = data.no
+                            chrome.runtime.sendMessage(sendVal, () => {
+                            exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
+                            })
+
+                            // PDF自体は作れる
+                            param.isCreateInvoicePDF = true;
+                            param.isQualifiedInvoice = isInvoice;
+                            param.qualifiedInvoiceReason = "作成";
+                        } catch (e) {
+                            // PDF自体はあったが、制作過程で何らかのエラーが生じ作れなかった
+                            exportUserLogMsg(`PDF情報取得時にエラーが発生し取得できませんでした。`)
+                            param.qualifiedInvoiceReason = "取得エラー";
+                        }
                         // console.log(serializable)
                     } else {
                         // todo .pdfで終わるものが無かったので、ここはエラーを保持して警告出す
-                        // 会計処理終わってないケース
+                        // A.発送や会計処理終わってないケース
                         // <a class="a-link-normal" hrclassNamegp/help/customer/display.html/ref=oh_aui_ajax_legal_invoice_help?ie=UTF8&amp;nodeId=201986650">
                         //             領収書／購入明細書がご利用になれません。くわしくはこちら。
                         //         </a>
-
-
+                        invoiceLinkNode.querySelectorAll(`a`)
+                        let target = Array.from(invoiceLinkNode.querySelectorAll("a"))
+                            .find(a => a.textContent.indexOf("領収書／購入明細書がご利用になれません。") !== -1)
+                        if (target) {
+                            param.qualifiedInvoiceReason = `未発送・会計処理が終了していない注文です。`
+                        } else {
+                            param.qualifiedInvoiceReason = `領収書の発行しか出来ず、適格請求書・支払い明細が取得できない注文です。`
+                        }
+                        exportUserLogMsg(`${param.qualifiedInvoiceReason}`)
                     }
                 }
                 if (pdfArrayBuffer) {
-                    downloadPDF(pdfArrayBuffer, fileName);
+                    if(isPdfGetAndDownload)downloadPDF(pdfArrayBuffer, fileName);
                 } else {
                     // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
 
                 }
+
+                resultOrderOutputs.push(createOrderOutputObject(data, param))
+
             }
+
             await sleep(500);
+            exportUserLogMsg(`${data.no}の処理が終了しました`)
         }
+        // console.log(resultOrderOutputs);
+
+        exportUserLogMsg(`デジタル${includeDigital ? "を含んだ" : "を含まない"}商品のデータ${list.length}件の処理が終了しました`)
+        exportUserLogMsg(`結果ページを開きます。`)
+        chrome.runtime.sendMessage(
+            {type: "invoice-result", site: "Amazon", data: resultOrderOutputs}
+        )
+    }
+
+    function exportUserLogMsg(msg) {
+        let msgP = document.createElement("p")
+        msgP.innerHTML = msg;
+        msgP.style.margin = "0";
+        msgP.style.paddingBottom = ".15em"
+        document.getElementById(LOG_MESSAGE_FIELD).prepend(msgP)
     }
 
     async function sleep(milSec = 1000) {
@@ -337,23 +467,35 @@ function amazonOrderPage() {
         wrap.appendChild(select);
         tmp.innerHTML = `
         <div>
-        <div style="display: flex;gap: .5em">
-            <div>
-               ${wrap.innerHTML}
+            <div style="display: flex;gap: .5em">
+                <div>
+                   ${wrap.innerHTML}
+                </div>
+                <button id="${EXEC_ELEMENT_ID}">
+                ページに表示された注文情報のインボイスデータを作る
+                </button>
+                <div>
+                <label><input type="checkbox" id="${INCLUDE_DIGITAL_CHOICE_ID}">デジタルを含める</label>
+                </div>
+                <div>
+                <label><input type="checkbox" id="${PDF_GET_AND_DOWNLOAD_CHOICE_ID}" checked="checked">PDF取得とダウンロードを同時に行う</label>
+                </div>
             </div>
-            <button id="${EXEC_ELEMENT_ID}">
-            ページに表示された注文情報の領収書データを作る
-            </button>
-        </div>
+            <div style="border: inset 2px #ccc">
+            <p style="margin: 0;border-bottom: solid 1px ">ログメッセージ:</p>
+            <div id="${LOG_MESSAGE_FIELD}" style="max-height: 3em;overflow-y: scroll;width: 100%;">
+            
+            </div>
+            </div>
         </div>
         `;
 
         return tmp.children[0];
     }
 
-    function filterNonDigitalOrders() {
+    function createOrders() {
         let orderNodes = Array.from(document.querySelectorAll(`.js-order-card`))
-            .filter(e=>!e.parentElement.classList.contains(`js-order-card`));
+            .filter(e => !e.parentElement.classList.contains(`js-order-card`));
         /**
          *
          * @type {{date: string, invoiceData: {}, no: string, price: {total: string}, title: string}[]}
@@ -363,27 +505,54 @@ function amazonOrderPage() {
             node => list.push(createOrderObject(node))
         )
         console.log(list);
-        return list.filter(d => !d.no.match(/^D/))
+        return list
+    }
+
+    function filterNonDigitalOrders() {
+        return createOrders().filter(d => !d.isDigital)
     }
 
     function createOrderObject(node) {
         /**
          *
-         * @type {{date: string, invoiceData: {}, no: string, price: {total: string}, title: string}}
+         * @type {{date: string, invoiceData: {}, no: string, isDigital: boolean, price: {total: string}, title: string}}
          */
         let orderObj = {
             no: ""
-            , title: ""
+            , title: []
             , date: ""
             , price: {
                 total: ""
             }
             , invoiceData: {}
+            , isDigital: false
         }
         orderObj.no = node.querySelector(`.yohtmlc-order-id .value,.yohtmlc-order-id [dir="ltr"]`).textContent.trim()
         // todo 複数ある場合があるので先頭のみ、ただデータとしては取得する可能性あり
         // todo 商品リンクとASINは保持
-        orderObj.title = node.querySelector(`.yohtmlc-item .a-link-normal,.yohtmlc-product-title`).textContent.trim()
+        let linkNodes = Array.from(node.querySelectorAll("a[href]"))
+            .filter(node => node.href.match(/\/[A-Z,0-9]{10}[/|?]/))
+        let titles = linkNodes
+            .filter(a => !a.querySelector("img"));
+        let images = linkNodes
+            .filter(a => a.querySelector("img"));
+        //.querySelector(`.yohtmlc-item .a-link-normal,.yohtmlc-product-title`).textContent.trim()
+        titles.forEach((titleLinkNode, index) => {
+            //
+            let asin = titleLinkNode.href.match(/\/[A-Z,0-9]{10}[/|?]/)[0]
+                .replaceAll("/", "")
+                .replaceAll("?", "");
+            let href = titleLinkNode.href;
+            let title = titleLinkNode.textContent;
+            let imageWrapLinkNode = images[index];
+            let img = imageWrapLinkNode.querySelector("img");
+            let imgSrc = img.getAttribute("data-src") ?
+                img.getAttribute("data-src") : img.getAttribute("src");
+            orderObj.title.push(
+                {asin, href, title, imgSrc}
+            )
+
+        })
         //
         orderObj.price.total = node.querySelector(`.yohtmlc-order-total .value,.yohtmlc-order-total`).textContent.trim()
         // ヘッダーの日付フォーマットを取得
@@ -394,6 +563,7 @@ function amazonOrderPage() {
             Array.from(node.querySelectorAll(`.order-info .yohtmlc-order-level-connections [data-a-popover],.order-header .yohtmlc-order-level-connections [data-a-popover]`))
                 .filter(elem => ~elem.textContent.indexOf("領収書"))[0]
                 .getAttribute("data-a-popover"))
+        orderObj.isDigital = Boolean(orderObj.no.match(/^D/))
         return orderObj;
 
     }
