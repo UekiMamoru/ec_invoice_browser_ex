@@ -18,7 +18,7 @@ function amazonOrderPage() {
     const EXEC_YEAR_PRODUCT_LIST_ID = `ecYearProductListExec`;
     const INCLUDE_DIGITAL_CHOICE_ID = `ecDigitalChoice`;
     const LOG_MESSAGE_FIELD = `ecLogMsgField`;
-    const PDF_GET_AND_DOWNLOAD_CHOICE_ID  =`ecPdfGetAndDownload`;
+    const PDF_GET_AND_DOWNLOAD_CHOICE_ID = `ecPdfGetAndDownload`;
     let includeDigital = false;
     let activeCreateList = false;
     // オーダーページなので、デジタル以外
@@ -43,7 +43,7 @@ function amazonOrderPage() {
         if (target) {
             // イベント進行中は捨てる
             if (activeCreateList) return;
-            target.setAttribute("disabled","disbled")
+            target.setAttribute("disabled", "disbled")
             activeCreateList = true;
             return createList(event).then(() => {
 
@@ -232,9 +232,9 @@ function amazonOrderPage() {
         if (!event.target.closest(`#${EXEC_ELEMENT_ID}`)) return
 
         let isPdfGetAndDownload = document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
-        let pdfGetAndDownloadMsg  =`PDF取得とダウンロードを同時に行います`
-        if(!isPdfGetAndDownload){
-            pdfGetAndDownloadMsg  =`PDF取得のみ行います`
+        let pdfGetAndDownloadMsg = `PDF取得とダウンロードを同時に行います`
+        if (!isPdfGetAndDownload) {
+            pdfGetAndDownloadMsg = `PDF取得のみ行います`
         }
         exportUserLogMsg(pdfGetAndDownloadMsg)
         exportUserLogMsg(`デジタル${includeDigital ? "を含んだ" : "を含まない"}商品のデータを取得します...`)
@@ -334,18 +334,18 @@ function amazonOrderPage() {
 
                         // もし、「請求書をリクエスト」が存在したら、適格領収書ではない
                         if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
-                            // 発見したので適格領収書ではない
-                            fileName = `[no_invoice_number]_${fileName}`
+                            // 発見したので適格領収書ではない可能性があるがこの時点では特定できない
+                            fileName = `_${fileName}`
                             param.sellerContactURL = invoiceLinkNode.body.querySelector(`[href*="help/contact/contact.html"]`).href;
                             isInvoice = false;
-                            exportUserLogMsg(`PDFは適格領収書ではないようです`)
+                            exportUserLogMsg(`PDFは適格領収書ではないかもしれません`)
                         } else {
                             isInvoice = true;
                             exportUserLogMsg(`PDFは適格領収書のようです`)
 
 
                         }
-                        let pdfURL = target.href;
+                        let pdfURL = target.shift().href;
                         try {
                             let pdfStrs = []
                             // PDF　URLが複数ある可能性があるので、リスト化する
@@ -368,7 +368,7 @@ function amazonOrderPage() {
                             exportUserLogMsg(`PDF情報をキャッシュします`)
                             let id = data.no
                             chrome.runtime.sendMessage(sendVal, () => {
-                            exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
+                                exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
                             })
 
                             // PDF自体は作れる
@@ -399,7 +399,7 @@ function amazonOrderPage() {
                     }
                 }
                 if (pdfArrayBuffer) {
-                    if(isPdfGetAndDownload)downloadPDF(pdfArrayBuffer, fileName);
+                    if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
                 } else {
                     // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
 
