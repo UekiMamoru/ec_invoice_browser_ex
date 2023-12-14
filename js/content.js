@@ -267,7 +267,7 @@ function amazonOrderPage() {
                 let pdfArrayBuffer;
                 if (result.state) {
                     exportUserLogMsg(`キャッシュに存在していたため、キャッシュデータを利用します。`)
-                    let pdfStr = result.data.pdfStr[0];
+                    let pdfStr = result.data.pdfStrs[0];
                     fileName = `tmp_${result.data.fileName}`;
                     pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr);
                     param = result.data.param;
