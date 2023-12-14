@@ -581,10 +581,6 @@ async function getPDFArrayBuffer(
 }
 
 
-function arrayBuffSerializableStringToArrayBuff(str) {
-    const newArrayBuffer = base64ToArrayBuffer(str);
-    return newArrayBuffer;
-}
 
 function arrayBufferToStringSerializable(arrayBuff) {
 
@@ -604,6 +600,10 @@ function arrayBufferToBase64(buffer) {
     return window.btoa(binary);
 }
 
+function arrayBuffSerializableStringToArrayBuff(str) {
+    const newArrayBuffer = base64ToArrayBuffer(str);
+    return newArrayBuffer;
+}
 
 function base64ToArrayBuffer(base64) {
     const binaryString = window.atob(base64);

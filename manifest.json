@@ -18,7 +18,8 @@
     "storage",
     "debugger",
     "downloads",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "offscreen"
   ],
   "background": {
     "service_worker": "/js/worker.js"

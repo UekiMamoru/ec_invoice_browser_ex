@@ -2,5 +2,16 @@
   "name": "ec_invoice_downloder",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": "https://github.com/UekiMamoru/ec_invoice_browser_ex.git",
+  "author": "luna <info@lunaeaze.com>",
+  "dependencies": {
+    "pdfjs-dist": "^4.0.269",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "dev": "webpack --config webpack.config.js",
+    "build": "webpack --mode=production"
+  }
 }

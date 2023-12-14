@@ -3,7 +3,7 @@ const EC_KEY_PREFIX = "ec_"
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === "update") {
         // とりあえずバージョンアップ時は削除
-        flush();
+        // flush();
         // 以前のバージョンを取得
         const previousVersion = details.previousVersion;
 
@@ -28,6 +28,40 @@ chrome.runtime.onInstalled.addListener((details) => {
         });
     }
 });
+
+// オフスクリーンを開く
+
+let creating ;
+async function setupOffscreenDocument(path) {
+    // Check all windows controlled by the service worker to see if one
+    // of them is the offscreen document with the given path
+    const offscreenUrl = chrome.runtime.getURL(path);
+    const existingContexts = await chrome.runtime.getContexts({
+        contextTypes: ['OFFSCREEN_DOCUMENT'],
+        documentUrls: [offscreenUrl]
+    });
+
+    if (existingContexts.length > 0) {
+        return;
+    }
+
+    // create offscreen document
+    if (creating) {
+        await creating;
+    } else {
+        creating = chrome.offscreen.createDocument({
+            url: path,
+            // reasons: ['CLIPBOARD'],
+            reasons: ['BLOBS', "DOM_SCRAPING", "DOM_PARSER","WORKERS","LOCAL_STORAGE"],
+            justification: 'reason for needing the document',
+        });
+        await creating;
+        creating = null;
+    }
+}
+
+
+setupOffscreenDocument( 'offscreen/offscreen.html');
 chrome.runtime.onMessage.addListener(
     (message, sender, callback) => {
         if (message.hasOwnProperty("type") && message.type === "get-ec-pdf-data") {
