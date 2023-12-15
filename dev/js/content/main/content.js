@@ -98,11 +98,11 @@ function amazonOrderPage() {
         if (!year) return;
         // 選択期間の取得
         year = year.trim().replaceAll(/[^0-9]/ig, "")
-        try{
+        try {
 
-            document.querySelector(".a-pagination").style.display = "none";   
-        }catch (e) {
-            
+            document.querySelector(".a-pagination").style.display = "none";
+        } catch (e) {
+
         }
         // ページネーション
         let vm = new TermProductDataInsertVM();
@@ -134,7 +134,9 @@ function amazonOrderPage() {
             isCreateInvoicePDF: param.isCreateInvoicePDF,
             qualifiedInvoiceReason: param.qualifiedInvoiceReason,
             sellerContactURL: param.sellerContactURL,
+            sellerContactURLs: param.sellerContactURLs,
             sellerURL: param.sellerURL,
+            sellerURLs: param.sellerURLs,
             isCachePDF: param.isCachePDF,
             invoiceId: param.invoiceId
 
@@ -246,7 +248,7 @@ function amazonOrderPage() {
 
 
                     if (target.length) {
-
+                        exportUserLogMsg(`${data.no}のオーダーは${target.length}件データが見つかりました`)
                         // もし、「請求書をリクエスト」が存在したら、適格領収書ではない可能性あり
                         if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
                             // 発見したので適格領収書ではない可能性があるがこの時点では特定できない
@@ -255,60 +257,63 @@ function amazonOrderPage() {
                             // isInvoice = false;
                             // exportUserLogMsg(`PDFは適格領収書ではないかもしれません`)
                         }
-                        let pdfURL = target.shift().href;
-                        try {
-                            let pdfStrs = []
-                            // PDF　URLが複数ある可能性があるので、リスト化する
+                        let pdfStrs = []
+                        for (let i = 0; i < target.length; i++) {
+                            let pdfURL = target[i]
+                            let idx = i+1;
+                            try {
+                                // PDF　URLが複数ある可能性があるので、リスト化する
 
-                            exportUserLogMsg(`PDF情報の取得を開始します`)
-                            pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
-                            exportUserLogMsg(`PDF情報を取得しました`)
-                            // // stringへ変換
-                            let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
-                            pdfStrs.push(pdfStr);
+                                exportUserLogMsg(`PDF情報${idx}番目の取得を開始します`)
+                                pdfArrayBuffer = await getPDFArrayBuffer(pdfURL);
+                                exportUserLogMsg(`PDF情報を取得しました`)
+                                // // stringへ変換
+                                let pdfStr = arrayBufferToStringSerializable(pdfArrayBuffer);
+                                pdfStrs.push(pdfStr);
 
-                            // 取得したPDFデータを解析
-                            let decodeCheck = {
-                                type: `pdf-decode`
-                                , pdfStr
+                                // 取得したPDFデータを解析
+                                let decodeCheck = {
+                                    type: `pdf-decode`
+                                    , pdfStr
+                                }
+                                exportUserLogMsg(`PDF情報を解析します`)
+                                /**
+                                 * @type {{ type: string,invoiceId: string,isInvoice: boolean }}
+                                 */
+                                let pdfResult = await chrome.runtime.sendMessage(
+                                    decodeCheck
+                                )
+
+                                param.isQualifiedInvoice &= pdfResult.isInvoice;//isInvoice;
+                                param.invoiceId &= pdfResult.invoiceId
+                                exportUserLogMsg(`PDF情報を解析が終了しました`)
+                                console.log(pdfResult);
+                            } catch (e) {
+                                // PDF自体はあったが、制作過程で何らかのエラーが生じ作れなかった
+                                exportUserLogMsg(`PDF情報取得時にエラーが発生し取得できませんでした。`)
+                                param.qualifiedInvoiceReason = "取得エラー";
                             }
-                            exportUserLogMsg(`PDF情報を解析します`)
-                            /**
-                             * @type {{ type: string,invoiceId: string,isInvoice: boolean }}
-                             */
-                            let pdfResult = await chrome.runtime.sendMessage(
-                                decodeCheck
-                            )
-                            exportUserLogMsg(`PDF情報を解析が終了しました`)
-                            console.log(pdfResult);
-                            exportUserLogMsg(`PDF情報をキャッシュします`)
-                            let id = data.no
-
-                            // PDF自体は作れてる
-                            param.isCreateInvoicePDF = true;
-                            param.isQualifiedInvoice = pdfResult.isInvoice;//isInvoice;
-                            param.qualifiedInvoiceReason = "作成";
-                            param.invoiceId = pdfResult.invoiceId
-                            let sendVal = {
-                                ecName: AMAZON_EC_NAME,
-                                orderNumber: data.no,
-                                type: "set-ec-pdf-data",
-                                pdfStrs,
-                                fileName,
-                                isInvoice,
-                                param
-                            };
-                            chrome.runtime.sendMessage(sendVal, () => {
-                                exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
-                            })
-
-                        } catch (e) {
-                            // PDF自体はあったが、制作過程で何らかのエラーが生じ作れなかった
-                            exportUserLogMsg(`PDF情報取得時にエラーが発生し取得できませんでした。`)
-                            param.qualifiedInvoiceReason = "取得エラー";
                         }
-                        // console.log(serializable)
-                    } else {
+                        exportUserLogMsg(`PDF情報をキャッシュします`)
+                        let id = data.no
+
+                        // PDF自体は作れてる
+                        param.isCreateInvoicePDF = true;
+                        param.qualifiedInvoiceReason = "作成";
+                        let sendVal = {
+                            ecName: AMAZON_EC_NAME,
+                            orderNumber: data.no,
+                            type: "set-ec-pdf-data",
+                            pdfStrs,
+                            fileName,
+                            isInvoice,
+                            param
+                        };
+                        chrome.runtime.sendMessage(sendVal, () => {
+                            exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
+                        })
+
+                    }else {
                         // todo .pdfで終わるものが無かったので、ここはエラーを保持して警告出す
                         // A.発送や会計処理終わってないケース
                         // <a class="a-link-normal" hrclassNamegp/help/customer/display.html/ref=oh_aui_ajax_legal_invoice_help?ie=UTF8&amp;nodeId=201986650">
@@ -339,6 +344,7 @@ function amazonOrderPage() {
             await Thread.sleep(500);
             exportUserLogMsg(`${data.no}の処理が終了しました`)
         }
+
         // console.log(resultOrderOutputs);
 
         exportUserLogMsg(`デジタル${includeDigital ? "を含んだ" : "を含まない"}商品のデータ${list.length}件の処理が終了しました`)
