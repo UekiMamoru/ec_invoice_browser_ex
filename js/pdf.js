@@ -2,6 +2,25 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./dev/js/content/util/Thread.js":
+/*!***************************************!*\
+  !*** ./dev/js/content/util/Thread.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Thread: () => (/* binding */ Thread)
+/* harmony export */ });
+class Thread
+{
+    static sleep(milSec = 1000) {
+        return new Promise(r => setTimeout(r, milSec));
+    }
+}
+
+/***/ }),
+
 /***/ "./dev/js/pdf.js":
 /*!***********************!*\
   !*** ./dev/js/pdf.js ***!
@@ -11,8 +30,10 @@
 __webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pdfjs-dist/webpack.mjs */ "./node_modules/pdfjs-dist/webpack.mjs");
+/* harmony import */ var _content_util_Thread__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./content/util/Thread */ "./dev/js/content/util/Thread.js");
 var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__]);
 pdfjs_dist_webpack_mjs__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
 
 
 chrome.runtime.onMessage.addListener((message, p, callback) => {
@@ -63,7 +84,7 @@ async function getPDFTypeNum(pdfStr = "") {
     let renderTask = page.render(renderContext);
     // renderTask.promise.then(function () {
     //     console.log('Page rendered');
-    await sleep(300)
+    await _content_util_Thread__WEBPACK_IMPORTED_MODULE_1__.Thread.sleep(300)
     let v = await page.getTextContent();
     let items = v.items;
     console.log(items[0].str.match("適格請求書"))
@@ -102,11 +123,6 @@ function base64ToArrayBuffer(base64) {
     return bytes.buffer;
 }
 
-async function sleep(milSec = 1000) {
-    return new Promise(resolve => {
-        setTimeout(() => resolve(), milSec)
-    })
-}
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
 

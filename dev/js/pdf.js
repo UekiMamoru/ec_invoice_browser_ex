@@ -1,4 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist/webpack.mjs';
+import {Thread} from "./content/util/Thread";
 
 chrome.runtime.onMessage.addListener((message, p, callback) => {
     if (message.type === "offscreen-pdf-decode") {
@@ -48,7 +49,7 @@ async function getPDFTypeNum(pdfStr = "") {
     let renderTask = page.render(renderContext);
     // renderTask.promise.then(function () {
     //     console.log('Page rendered');
-    await sleep(300)
+    await Thread.sleep(300)
     let v = await page.getTextContent();
     let items = v.items;
     console.log(items[0].str.match("適格請求書"))
@@ -85,10 +86,4 @@ function base64ToArrayBuffer(base64) {
     }
 
     return bytes.buffer;
-}
-
-async function sleep(milSec = 1000) {
-    return new Promise(resolve => {
-        setTimeout(() => resolve(), milSec)
-    })
 }

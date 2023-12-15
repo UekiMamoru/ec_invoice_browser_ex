@@ -2,13 +2,15 @@ const path = require('path');
 
 module.exports = {
 
-	//エントリポイントのJavaScript
-	entry: {
+    //エントリポイントのJavaScript
+    entry: {
 
-        'pdf':"./dev/js/pdf.js"
+        'pdf': "./dev/js/pdf.js",
+        "content": "./dev/js/content/main/content.js",
+        "worker": "./dev/js/background/worker.js"
     },
     devtool: false,
-    mode:"development",
+    mode: "development",
     output: {
         filename: "[name].js",
         // path: path.resolve(__dirname, './public/js/'),

@@ -1,3 +1,5 @@
+import {Thread} from "../content/util/Thread";
+
 const EC_KEY_PREFIX = "ec_"
 // バージョンが古い場合でフラッシュ
 chrome.runtime.onInstalled.addListener((details) => {
@@ -108,7 +110,7 @@ chrome.runtime.onMessage.addListener(
             chrome.tabs.create({url: chrome.runtime.getURL("option/invoice-result.html")}).then(
                 (tab) => {
                     let id = tab.id;
-                    sleep(500).then(
+                    Thread.sleep(500).then(
                         () => {
                             console.log(message);
                             chrome.tabs.sendMessage(id, message);
@@ -127,11 +129,3 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-async function sleep(milSec = 1000) {
-    return new Promise(resolve => {
-
-        setTimeout(() => {
-            resolve()
-        }, milSec)
-    })
-}

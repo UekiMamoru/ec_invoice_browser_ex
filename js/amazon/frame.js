@@ -38,7 +38,8 @@ function amazonOrderPageFrame() {
 
 
     function getOrderList() {
-        return Array.from(document.querySelectorAll(".order.js-order-card,.order-card.js-order-card"));
+        let list =  Array.from(document.querySelectorAll(".order.js-order-card,.order-card.js-order-card"));
+        return list.filter(e=>!e.parentElement.classList.contains("js-order-card"))
     }
 
     // // オーダーリストが取れるまで待ってメッセージパッシング
