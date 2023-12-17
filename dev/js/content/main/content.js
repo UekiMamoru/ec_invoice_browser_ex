@@ -120,7 +120,7 @@ function amazonOrderPage() {
      *
      * @param orderObj
      * @param param
-     * @returns {{date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean}}
+     * @returns {{date: string, orderNumber: string, isDigital: boolean, sellerURLs: *, isCreateInvoicePDF: (boolean|*), productDataList: string, sellerContactURL: (string|string|*), isMultipleOrder: boolean, invoiceList: ([]|*), sellerURL: (string|string|*), price: string, isQualifiedInvoice: (boolean|*), invoiceId: (string|string|*), isCachePDF: (boolean|*), qualifiedInvoiceReason}}
      */
     function createOrderOutputObject(orderObj, param) {
         let output = {
@@ -134,11 +134,11 @@ function amazonOrderPage() {
             isCreateInvoicePDF: param.isCreateInvoicePDF,
             qualifiedInvoiceReason: param.qualifiedInvoiceReason,
             sellerContactURL: param.sellerContactURL,
-            sellerContactURLs: param.sellerContactURLs,
+            invoiceId: param.invoiceId,
             sellerURL: param.sellerURL,
             sellerURLs: param.sellerURLs,
             isCachePDF: param.isCachePDF,
-            invoiceId: param.invoiceId
+            invoiceList: param.invoiceList
 
         }
         return output;
@@ -171,23 +171,46 @@ function amazonOrderPage() {
 
                 }
                 let param = {
-                    isQualifiedInvoice: false,
-                    isCreateInvoicePDF: false,
+                    isQualifiedInvoice: true,
+                    isCreateInvoicePDF: true,
+                    qualifiedInvoiceReason: "",
+
+                    sellerContactURL: "",
+                    invoiceList: [],
+                }
+                /**
+                 *
+                 * @type {{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURL: string, qualifiedInvoiceReason: string}}
+                 */
+                let invoiceListParam = {
+                    isQualifiedInvoice: true,
+                    isCreateInvoicePDF: true,
                     qualifiedInvoiceReason: "",
                     sellerContactURL: "",
                     sellerURL: "",
                     isCachePDF: false,
-                    invoiceId: ""
+                    invoiceId: "",
+                    fileIdx: 0
                 }
                 let result = await chrome.runtime.sendMessage(getVal);
                 // 既にあったので、既存データで作成
                 let pdfArrayBuffer;
                 if (result.state) {
                     exportUserLogMsg(`キャッシュに存在していたため、キャッシュデータを利用します。`)
-                    let pdfStr = result.data.pdfStrs[0];
-                    fileName = `tmp_${result.data.fileName}`;
-                    pdfArrayBuffer = arrayBuffSerializableStringToArrayBuff(pdfStr);
-                    param = result.data.param;
+                    let data = result.data
+                    let param = result.data.param//.invoiceList;
+                    //
+                    data.pdfStrs.forEach((pdfStr, idx) => {
+                        let fileName = `tmp_${result.data.fileName}${idx>1?idx-1:""}`;
+                        pdfArrayBuffer.push(arrayBuffSerializableStringToArrayBuff(pdfStr));
+                        if (pdfArrayBuffer) {
+                            if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
+                        } else {
+                            // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
+                        }
+                        pdfArrayBuffer = "";
+                        // param = invoiceListParam;
+                    });
                 } else {
                     let url = `https://www.amazon.co.jp${data.invoiceData.url}`;
                     // urlをフェッチリクエストしてPDFリンクを生成
@@ -250,6 +273,7 @@ function amazonOrderPage() {
                     if (target.length) {
                         exportUserLogMsg(`${data.no}のオーダーは${target.length}件データが見つかりました`)
                         // もし、「請求書をリクエスト」が存在したら、適格領収書ではない可能性あり
+
                         if (invoiceLinkNode.body.innerHTML.indexOf("help/contact/contact.html") !== -1) {
                             // 発見したので適格領収書ではない可能性があるがこの時点では特定できない
                             // fileName = `_${fileName}`
@@ -259,8 +283,15 @@ function amazonOrderPage() {
                         }
                         let pdfStrs = []
                         for (let i = 0; i < target.length; i++) {
-                            let pdfURL = target[i]
-                            let idx = i+1;
+                            let pdfURL = target[i].href
+                            let idx = i + 1;
+                            /**
+                             *
+                             * @type {{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURL: string, qualifiedInvoiceReason: string}}
+                             */
+                            let copyParam = JSON.parse(JSON.stringify(invoiceListParam));
+                            param.invoiceList.push(copyParam);
+                            copyParam.fileIdx = idx;
                             try {
                                 // PDF　URLが複数ある可能性があるので、リスト化する
 
@@ -284,14 +315,20 @@ function amazonOrderPage() {
                                     decodeCheck
                                 )
 
-                                param.isQualifiedInvoice &= pdfResult.isInvoice;//isInvoice;
-                                param.invoiceId &= pdfResult.invoiceId
+                                copyParam.isQualifiedInvoice = pdfResult.isInvoice;//isInvoice;
+                                copyParam.invoiceId = pdfResult.invoiceId
                                 exportUserLogMsg(`PDF情報を解析が終了しました`)
+                                if (pdfArrayBuffer) {
+                                    if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
+                                } else {
+                                    // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
+
+                                }
                                 console.log(pdfResult);
                             } catch (e) {
                                 // PDF自体はあったが、制作過程で何らかのエラーが生じ作れなかった
                                 exportUserLogMsg(`PDF情報取得時にエラーが発生し取得できませんでした。`)
-                                param.qualifiedInvoiceReason = "取得エラー";
+                                copyParam.qualifiedInvoiceReason = "取得エラー";
                             }
                         }
                         exportUserLogMsg(`PDF情報をキャッシュします`)
@@ -313,7 +350,11 @@ function amazonOrderPage() {
                             exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
                         })
 
-                    }else {
+                    } else {
+                        // param.isCachePDF = false
+                        param.isCreateInvoicePDF = false
+                        param.isQualifiedInvoice = false
+
                         // todo .pdfで終わるものが無かったので、ここはエラーを保持して警告出す
                         // A.発送や会計処理終わってないケース
                         // <a class="a-link-normal" hrclassNamegp/help/customer/display.html/ref=oh_aui_ajax_legal_invoice_help?ie=UTF8&amp;nodeId=201986650">
@@ -329,12 +370,6 @@ function amazonOrderPage() {
                         }
                         exportUserLogMsg(`${param.qualifiedInvoiceReason}`)
                     }
-                }
-                if (pdfArrayBuffer) {
-                    if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
-                } else {
-                    // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
-
                 }
 
                 resultOrderOutputs.push(createOrderOutputObject(data, param))

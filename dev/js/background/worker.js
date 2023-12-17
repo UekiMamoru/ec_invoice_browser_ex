@@ -4,8 +4,6 @@ const EC_KEY_PREFIX = "ec_"
 // バージョンが古い場合でフラッシュ
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === "update") {
-        // とりあえずバージョンアップ時は削除
-        // flush();
         // 以前のバージョンを取得
         const previousVersion = details.previousVersion;
 
@@ -13,8 +11,9 @@ chrome.runtime.onInstalled.addListener((details) => {
         const currentVersion = chrome.runtime.getManifest().version;
 
         // バージョンが0.0.1から0.0.2にアップデートされたかを確認
-        if (previousVersion === "0.0.2" && currentVersion === "0.0.3") {
-
+        if (previousVersion<currentVersion) {
+            // とりあえずバージョンアップ時は削除
+            flush();
         }
     }
 
@@ -90,7 +89,6 @@ chrome.runtime.onMessage.addListener(
             let key = `${EC_KEY_PREFIX}${ecName}`;
             let list = [key];
             let orderNumber = message.orderNumber
-            let pdfStr = message.pdfStr;
             let fileName = message.fileName;
             let isInvoice = message.isInvoice;
             let param = message.param
@@ -101,7 +99,7 @@ chrome.runtime.onMessage.addListener(
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = {pdfStr, fileName, isInvoice, pdfStrs, param}
+                data[orderNumber] = { fileName, isInvoice, pdfStrs, param}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })
