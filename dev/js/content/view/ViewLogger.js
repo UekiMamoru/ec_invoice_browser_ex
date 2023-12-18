@@ -19,7 +19,9 @@ export class ViewLogger
         let msgP = document.createElement("p")
         msgP.innerHTML = msg;
         msgP.style.margin = "0";
-        msgP.style.paddingBottom = ".15em"
-        this._field.prepend(msgP)
+        msgP.style.paddingBottom = ".15em";
+        msgP.style.color = "white";
+        msgP.style.fontSize = "12px";
+        this._field.prepend(msgP);
     }
 }

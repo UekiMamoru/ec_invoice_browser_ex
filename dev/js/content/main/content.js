@@ -11,6 +11,7 @@ import {TermProductDataInsertVM} from "../vm/TermProductDataInsertVM";
 import {ViewLogger} from "../view/ViewLogger";
 import {Thread} from "../util/Thread";
 import {AmazonHistoryCtrlLock} from "../view/ctrl/AmazonHistoryCtrlLock";
+import {LoaderEffect} from "../view/eff/LoaderEffect";
 
 const AMAZON_EC_NAME = "amazon"
 amazonOrderPage()
@@ -24,11 +25,16 @@ function amazonOrderPage() {
     let viewLogger = new ViewLogger();
     const amazonHistoryCtrlLock = new AmazonHistoryCtrlLock();
     amazonHistoryCtrlLock.logger = viewLogger;
+    let progressElement = document.createElement("progress");
+    const loaderEffect = new LoaderEffect(progressElement);
+    loaderEffect.hide();
+
     const EXEC_ELEMENT_ID = `ecInvoiceExec`;
     const EXEC_YEAR_PRODUCT_LIST_ID = `ecYearProductListExec`;
     const INCLUDE_DIGITAL_CHOICE_ID = `ecDigitalChoice`;
     const LOG_MESSAGE_FIELD = `ecLogMsgField`;
     const PDF_GET_AND_DOWNLOAD_CHOICE_ID = `ecPdfGetAndDownload`;
+    const PROGRESS_WRAP_ID = `ecProgressBarWrap`;
     amazonHistoryCtrlLock.lockTargetSelectors = [
         `#${EXEC_ELEMENT_ID}`,
         `#${EXEC_YEAR_PRODUCT_LIST_ID}`,
@@ -42,6 +48,7 @@ function amazonOrderPage() {
     let insertNode = createControlFieldElem();
     let t = getInsertTarget()
     t.prepend(insertNode);
+    insertNode.querySelector(`#${PROGRESS_WRAP_ID}`).appendChild(progressElement)
     viewLogger.field = document.getElementById(LOG_MESSAGE_FIELD);
     addEvent();
 
@@ -82,6 +89,7 @@ function amazonOrderPage() {
         if (asyncFunc) {
             amazonHistoryCtrlLock.lock();
             asyncFunc.finally(() => {
+                loaderEffect.hide();
                 amazonHistoryCtrlLock.unlock();
             })
         }
@@ -109,6 +117,7 @@ function amazonOrderPage() {
         vm.year = year;
         vm.inserter = new ProductDataInserter();
         vm.logger = viewLogger;
+        vm.progress = loaderEffect
         return await vm.exec();
     }
 
@@ -202,7 +211,7 @@ function amazonOrderPage() {
                     //
                     data.pdfStrs.forEach((pdfStr, idx) => {
                         let fileName = `tmp_${result.data.fileName}${idx > 1 ? idx - 1 : ""}`;
-                        pdfArrayBuffer=(arrayBuffSerializableStringToArrayBuff(pdfStr));
+                        pdfArrayBuffer = (arrayBuffSerializableStringToArrayBuff(pdfStr));
                         if (pdfArrayBuffer) {
                             if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
                         } else {
@@ -324,7 +333,7 @@ function amazonOrderPage() {
                                 exportUserLogMsg(`PDF情報を解析が終了しました`)
                                 if (pdfArrayBuffer) {
                                     if (isPdfGetAndDownload) {
-                                        let number = idx > 1?`-${idx-1}`:""
+                                        let number = idx > 1 ? `-${idx - 1}` : ""
                                         let exportFileName = `${fileName}${number}`
                                         downloadPDF(pdfArrayBuffer, exportFileName);
                                     }
@@ -431,8 +440,12 @@ function amazonOrderPage() {
         let wrap = tmp.cloneNode();
         wrap.innerHTML = `<span>表示する年を選択：</span>`
         wrap.appendChild(select);
+        let col = "#8effd9";
+        let borCol = `#ccc`
         tmp.innerHTML = `
-        <div>
+        <div style="padding-bottom: .5em;margin-bottom: .5em;border: solid 2px ${col};">
+            <h3 style="padding: 3px;background-color: ${col};margin-bottom: 9px;border-bottom: solid 2px ${borCol};">ECダウンローダーコントロール</h3>
+            <div style="padding: 6px 0;">
             <div style="display: flex;gap: .5em">
                 <div>
                    ${wrap.innerHTML}
@@ -443,14 +456,15 @@ function amazonOrderPage() {
                 <div>
                 <label><input type="checkbox" id="${INCLUDE_DIGITAL_CHOICE_ID}">デジタルを含める</label>
                 </div>
-                <div>
+                <div id="${PROGRESS_WRAP_ID}">
 <!--                <label><input type="checkbox" id="${PDF_GET_AND_DOWNLOAD_CHOICE_ID}" checked="checked">PDF取得とダウンロードを同時に行う</label>-->
                 </div>
             </div>
-            <div style="border: inset 2px #ccc">
-            <p style="margin: 0;border-bottom: solid 1px ">ログメッセージ:</p>
-            <div id="${LOG_MESSAGE_FIELD}" style="max-height: 3em;overflow-y: scroll;width: 100%;">
+            <div style="border: inset 1px ${borCol};">
+            <p style="margin: 0;border-bottom: solid 2px ">ログメッセージ:</p>
+            <div id="${LOG_MESSAGE_FIELD}" style="padding:.25em; max-height: 3em;overflow-y: scroll;width: 100%;background-color: black;color: white">
             
+            </div>
             </div>
             </div>
         </div>

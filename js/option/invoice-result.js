@@ -1,6 +1,7 @@
 (
     () => {
 
+        const AMAZON_EC_NAME = "amazon"
         chrome.runtime.onMessage.addListener((message, sender, callback) => {
             if (message.type === "invoice-result") {
                 let site = message.site
@@ -8,6 +9,73 @@
                 document.querySelector("#resultField").innerHTML = createTable(message.data);
             }
         })
+
+
+        document.body.addEventListener("click", async (ev) => {
+            let target = ev.target.closest(`.qualifiedInvoiceDownload`);
+
+            if (target) {
+                let dataIdx = target.getAttribute("data-idx")-0;
+                let orderNumber = target.getAttribute("data-order-no");
+                let getVal = {
+                    ecName: AMAZON_EC_NAME,
+                    orderNumber,
+                    type: "get-ec-pdf-data",
+
+                }
+                let result = await chrome.runtime.sendMessage(getVal);
+
+                // 既にあったので、既存データで作成
+                let pdfArrayBuffer;
+                // exportUserLogMsg(`キャッシュに存在していたため、キャッシュデータを利用します。`)
+                let data = result.data
+                let param = result.data.param//.invoiceList;
+                //
+                data.pdfStrs.forEach((pdfStr, idx) => {
+                    if(idx === dataIdx){
+                        let fileName = `tmp_${result.data.fileName}${idx > 1 ? idx - 1 : ""}`;
+                        pdfArrayBuffer = (arrayBuffSerializableStringToArrayBuff(pdfStr));
+                        if (pdfArrayBuffer) {
+                            downloadPDF(pdfArrayBuffer, fileName);
+                        }
+                        pdfArrayBuffer = "";
+                    }
+                    // param = invoiceListParam;
+                });
+            }
+            return false
+        })
+
+        function arrayBuffSerializableStringToArrayBuff(str) {
+            const newArrayBuffer = base64ToArrayBuffer(str);
+            return newArrayBuffer;
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            return bytes.buffer;
+        }
+
+        function downloadPDF(arrayBuffer, fileName) {
+
+            // ここでnewArrayBufferを使用する
+            const objectUrl = URL.createObjectURL(new Blob([arrayBuffer]));
+            const objectLink = document.createElement('a');
+            objectLink.href = objectUrl;
+            objectLink.setAttribute('download', `${fileName}.pdf`);
+            document.body.appendChild(objectLink);
+            objectLink.click();
+            URL.revokeObjectURL(objectLink.href);
+            document.body.removeChild(objectLink);
+            // objectLink.revokeObjectURL();
+        }
 
         function createTable(productDataList) {
             let bodyRow = ""
@@ -65,7 +133,7 @@
             <td>${resultData.isCreateInvoicePDF}</td>
             <td>${createQualifiedInvoiceField(resultData)}</td>
             <td>${createPaymentDetails(resultData)}</td>
-            <td>${resultData.isCachePDF?"-":""}</td>
+            <td>${resultData.isCachePDF ? "-" : ""}</td>
             </tr>
             `
         }
@@ -76,14 +144,12 @@
         function createPaymentDetails(resultData) {
             let invoiceIdsStr = ""
             let invoiceIdHTML = `<table><tbody>`;
-            debugger;
-            console.debug(resultData)
             for (let data of resultData.invoiceList) {
                 let body = `<tr><td>`
                 // if (data.invoiceId) {
-                    let dlStr =`${Boolean(data.isQualifiedInvoice) === false && data.isCreateInvoicePDF ? "<a>支払い明細DL</a></p>" : ""}`
-                    body +=dlStr;
-                    invoiceIdsStr+=dlStr;
+                let dlStr = `${Boolean(data.isQualifiedInvoice) === false && data.isCreateInvoicePDF ? "<a>支払い明細DL</a></p>" : ""}`
+                body += dlStr;
+                invoiceIdsStr += dlStr;
                 // }
                 // body += link;
                 body += `</td></tr>`
@@ -93,7 +159,7 @@
             let link = `${createSellerContactURL(resultData.sellerContactURLs)}`
             invoiceIdHTML += `</tbody></table>${link}`
             // 何も作れないケース
-            if(!invoiceIdsStr)invoiceIdHTML = "";
+            if (!invoiceIdsStr) invoiceIdHTML = "";
             return `
             
             ${invoiceIdHTML}
@@ -107,26 +173,33 @@
         function createQualifiedInvoiceField(resultData) {
             let invoiceIdsStr = ""
             let invoiceIdHTML = `<table><tbody>`;
-            for (let data
-                of resultData.invoiceList) {
+            resultData.invoiceList.forEach((data, idx) => {
+
                 let body = `<tr><td>`
+                console.log(data)
                 if (data.invoiceId) {
                     body = `<p>${data.invoiceId}</p>`
                 }
-                let link = `${data.isQualifiedInvoice ? "<a >適格領収書DL</a>" : ""}`
-                invoiceIdsStr+=link;
+                let link = createQualifiedInvoiceLink(resultData.orderNumber, data, idx)
+                invoiceIdsStr += link;
                 body += link;
                 body += `</td></tr>`
                 invoiceIdHTML += body;
-            }
+            })
             invoiceIdHTML += `</tbody></table>`
             // 何も作れない場合
-            if(!invoiceIdsStr)invoiceIdHTML="-"
+            if (!invoiceIdsStr) invoiceIdHTML = "-"
             return `
             
             ${invoiceIdHTML}
          
             `
+        }
+
+        function createQualifiedInvoiceLink(orderNo, data, idx) {
+            if (!data.isQualifiedInvoice) return "";
+            let str = `<a class='qualifiedInvoiceDownload' href="#" data-order-no='${orderNo}' data-idx='${idx}'>適格領収書DL</a>`
+            return str;
         }
 
         function createSellerContactURL(urlList = []) {

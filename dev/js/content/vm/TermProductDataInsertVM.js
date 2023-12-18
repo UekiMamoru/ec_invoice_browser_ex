@@ -28,6 +28,14 @@ export class TermProductDataInsertVM
          * @private
          */
         this._logger = null;
+
+
+        /**
+         *
+         * @type {LoaderEffect}
+         * @private
+         */
+        this._progress = null;
     }
 
 
@@ -67,15 +75,26 @@ export class TermProductDataInsertVM
         this._lastIndex = value;
     }
 
+
+    get progress() {
+        return this._progress;
+    }
+
+    set progress(value) {
+        this._progress = value;
+    }
+
     async exec() {
         let inserter = this._inserter;
         let logger = this._logger;
+        this._progress.show();
         logger.log(`現在の表示をフラッシュします`);
         inserter.flush();
         logger.log(`現在の表示をフラッシュしました`);
         let firstUrlView = new GetAllProductUrlView();
         let year = this._year;
         firstUrlView.src = this.createAccessURL(year)
+        this._progress.start(300)
 
         logger.log(`選択された[${year}]の1ページ目を取得します`);
         let {productNodes, lastIndex}
@@ -83,10 +102,15 @@ export class TermProductDataInsertVM
 
         logger.log(`選択された[${year}]の1ページ目を取得しました。最終ページは${lastIndex}です。`);
         this._lastIndex = lastIndex;
+        this._progress.start(
+            lastIndex
+        )
+        this._progress.update(1)
         inserter.inserts(productNodes);
         logger.log(`選択された[${year}]の1ページ目のデータを挿入します`);
         let urls = this.createAccessURLs(year, this._lastIndex);
         logger.log(`最終ページをもとに[${year}]アクセスするURLを生成します.`);
+        this._progress.end = this._lastIndex;
         const PARALLEL_PROCESS_COUNT = 3
         for (let i = 0; i < urls.length; i = i + PARALLEL_PROCESS_COUNT) {
 
@@ -105,18 +129,22 @@ export class TermProductDataInsertVM
                 if (v) promises.push(v.exec())
             })
 
-            logger.log(`${i+1}件目～${i+promises.length}件目`);
+            logger.log(`${i + 1}件目～${i + promises.length}件目`);
             logger.log(`並行アクセス(iframe)数は,${promises.length}件`);
             let results = await Promise.all(promises)
             results.forEach(result => {
                 console.log(result);
                 inserter.inserts(result.productNodes);
             })
+            this._progress.update(i + promises.length)
 
             logger.log(`取得挿入完了。スリープします。`);
             await Thread.sleep(300);
             logger.log(`スリープ終了。次の${PARALLEL_PROCESS_COUNT}件の処理に移ります。`);
         }
+
+        this._progress.update(lastIndex)
+        this._progress.hide()
         logger.log(`全件投入完了しました。`);
     }
 
