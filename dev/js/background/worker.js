@@ -10,7 +10,6 @@ chrome.runtime.onInstalled.addListener((details) => {
         // 現在のバージョンを取得
         const currentVersion = chrome.runtime.getManifest().version;
 
-        // バージョンが0.0.1から0.0.2にアップデートされたかを確認
         if (previousVersion<currentVersion) {
             // とりあえずバージョンアップ時は削除
             flush();

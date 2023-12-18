@@ -47,11 +47,11 @@
 
         /**
          *
-         * @param resultData{{invoiceList:[{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURL: string, qualifiedInvoiceReason: string}],date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
+         * @param resultData{{invoiceList:[{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURLs: [string], qualifiedInvoiceReason: string}],date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
          * @param idx integer
          */
         function createRow(resultData, idx = 0) {
-        // todo isCachePDF は配列から取得
+            // todo isCachePDF は配列から取得
             return `
             <tr>
             <td>${idx}</td>
@@ -65,27 +65,35 @@
             <td>${resultData.isCreateInvoicePDF}</td>
             <td>${createQualifiedInvoiceField(resultData)}</td>
             <td>${createPaymentDetails(resultData)}</td>
-            <td>${resultData.isCachePDF}</td>
+            <td>${resultData.isCachePDF?"-":""}</td>
             </tr>
             `
         }
 
         /**
-         * @param resultData{{invoiceList:[{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURL: string, qualifiedInvoiceReason: string}],date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
+         * @param resultData{{invoiceList:[{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURLs: string[], qualifiedInvoiceReason: string}],date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
          **/
-        function createPaymentDetails(resultData){
-            let invoiceIdHTML = `<table><tbody>`
+        function createPaymentDetails(resultData) {
+            let invoiceIdsStr = ""
+            let invoiceIdHTML = `<table><tbody>`;
+            debugger;
+            console.debug(resultData)
             for (let data of resultData.invoiceList) {
                 let body = `<tr><td>`
-                if (data.invoiceId) {
-                    body = `${Boolean(data.isQualifiedInvoice) === false && data.isCreateInvoicePDF ? "<a>支払い明細DL</a></p>" : ""}`
-                }
-                let link =`${createSellerContactURL(data.sellerContactURL)}`
-                body += link;
-                body+=`</td></tr>`
-                invoiceIdHTML+=body;
+                // if (data.invoiceId) {
+                    let dlStr =`${Boolean(data.isQualifiedInvoice) === false && data.isCreateInvoicePDF ? "<a>支払い明細DL</a></p>" : ""}`
+                    body +=dlStr;
+                    invoiceIdsStr+=dlStr;
+                // }
+                // body += link;
+                body += `</td></tr>`
+                invoiceIdHTML += body;
             }
-            invoiceIdHTML+=`</tbody></table>`
+
+            let link = `${createSellerContactURL(resultData.sellerContactURLs)}`
+            invoiceIdHTML += `</tbody></table>${link}`
+            // 何も作れないケース
+            if(!invoiceIdsStr)invoiceIdHTML = "";
             return `
             
             ${invoiceIdHTML}
@@ -96,38 +104,47 @@
         /**
          * @param resultData{{invoiceList:[{sellerURL: string, isCreateInvoicePDF: boolean, isQualifiedInvoice: boolean, fileIdx: number, isCachePDF: boolean, invoiceId: string, sellerContactURL: string, qualifiedInvoiceReason: string}],date: string, orderNumber: string, isDigital: boolean, sellerURL: (string|*), price: string, isCreateInvoicePDF: (boolean|*), productDataList: string, isQualifiedInvoice: (boolean|*), isCachePDF: (boolean|*), sellerContactURL: (string|*), qualifiedInvoiceReason: (string|*), isMultipleOrder: boolean,invoiceId:string}}
          **/
-        function createQualifiedInvoiceField(resultData){
-            let invoiceIdHTML = `<table><tbody>`
-            for (let data of resultData.invoiceList) {
+        function createQualifiedInvoiceField(resultData) {
+            let invoiceIdsStr = ""
+            let invoiceIdHTML = `<table><tbody>`;
+            for (let data
+                of resultData.invoiceList) {
                 let body = `<tr><td>`
                 if (data.invoiceId) {
                     body = `<p>${data.invoiceId}</p>`
                 }
                 let link = `${data.isQualifiedInvoice ? "<a >適格領収書DL</a>" : ""}`
+                invoiceIdsStr+=link;
                 body += link;
-                body+=`</td></tr>`
-                invoiceIdHTML+=body;
+                body += `</td></tr>`
+                invoiceIdHTML += body;
             }
-            invoiceIdHTML+=`</tbody></table>`
-                return `
+            invoiceIdHTML += `</tbody></table>`
+            // 何も作れない場合
+            if(!invoiceIdsStr)invoiceIdHTML="-"
+            return `
             
             ${invoiceIdHTML}
          
             `
         }
-        function createSellerContactURL(url){
-            if(!url)return "";
-            // ストア詳細
-            let sellerId = url.match(/sellerID=[A-Z|0-9]*/)[0];
-            sellerId = sellerId.replace("sellerID=","")
 
-            let storeURL = `https://www.amazon.co.jp/sp?seller=${sellerId}`;
-            return  `
-            <p>
-            <a href="${url}" target="_blank">ストアにチャットで連絡</a><br/>
-            <a href="${storeURL}" target="_blank">ストアを確認</a>
-            </p>
-            `
+        function createSellerContactURL(urlList = []) {
+            if (!urlList.length) return "";
+            let result = ""
+            urlList.forEach(url => {
+                // ストア詳細
+                let sellerId = url.match(/sellerID=[A-Z|0-9]*/)[0];
+                sellerId = sellerId.replace("sellerID=", "")
+
+                let storeURL = `https://www.amazon.co.jp/sp?seller=${sellerId}`;
+                result += `
+                    <p>
+                    <a href="${url}" target="_blank">ストアにチャットで連絡</a><br/>
+                    <a href="${storeURL}" target="_blank">ストアを確認</a>
+                    </p>`
+            })
+            return result;
         }
 
 
@@ -138,7 +155,6 @@
         function qualifiedInvoiceCell(resultData) {
             let word = "", note = "";
             // 適格領収書　で　かつ　複数注文品がある場合
-            resultData.isQualifiedInvoice
             if (resultData.isQualifiedInvoice && (resultData.productDataList.length > 1)) {
                 // YESだけど注釈
                 word = "Yes";
