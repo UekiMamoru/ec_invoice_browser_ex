@@ -36,8 +36,17 @@ export class TermProductDataInsertVM
          * @private
          */
         this._progress = null;
+        /**
+         *
+         * @type {HTMLElement}
+         * @private
+         */
+        this._resultElement = null
     }
 
+    set resultElement(_){
+        this._resultElement  = _;
+    }
 
     set logger(value) {
         this._logger = value;
@@ -84,9 +93,38 @@ export class TermProductDataInsertVM
         this._progress = value;
     }
 
+
+    /**
+     *
+     * @param cacheData {{target:number,data:HTMLElement[],lastIndex:number}}
+     */
+    execDraw(cacheData) {
+        let inserter = this._inserter;
+        let logger = this._logger;
+        this._progress.show();
+        logger.log(`現在の表示をフラッシュします`);
+        inserter.flush();
+        logger.log(`現在の表示をフラッシュしました`);
+        this._progress.start(cacheData.lastIndex)
+        cacheData.data.forEach((productNodes, index) => {
+
+            this._progress.update(index)
+            inserter.inserts(productNodes);
+        })
+        this._progress.update(cacheData.lastIndex)
+        this._progress.hide();
+        this.result(cacheData.target,cacheData.data);
+        return;
+    }
+
+    /**
+     *
+     * @return {Promise<{target:number,data:HTMLElement[],lastIndex:number}>}
+     */
     async exec() {
         let inserter = this._inserter;
         let logger = this._logger;
+        let cacheNodes = [];
         this._progress.show();
         logger.log(`現在の表示をフラッシュします`);
         inserter.flush();
@@ -106,6 +144,7 @@ export class TermProductDataInsertVM
             lastIndex
         )
         this._progress.update(1)
+        cacheNodes.push(productNodes);
         inserter.inserts(productNodes);
         logger.log(`選択された[${year}]の1ページ目のデータを挿入します`);
         let urls = this.createAccessURLs(year, this._lastIndex);
@@ -130,11 +169,12 @@ export class TermProductDataInsertVM
             })
 
             logger.log(`${i + 1}件目～${i + promises.length}件目`);
-            logger.log(`並行アクセス(iframe)数は,${promises.length}件`);
+            logger.log(`並行アクセス数は,${promises.length}件`);
             let results = await Promise.all(promises)
             results.forEach(result => {
                 console.log(result);
                 inserter.inserts(result.productNodes);
+                cacheNodes.push(result.productNodes);
             })
             this._progress.update(i + promises.length)
 
@@ -146,6 +186,15 @@ export class TermProductDataInsertVM
         this._progress.update(lastIndex)
         this._progress.hide()
         logger.log(`全件投入完了しました。`);
+        this.result(year,cacheNodes);
+        return {target: this._year, data: cacheNodes, lastIndex: this._lastIndex}
+    }
+    result(year,nodesList=[[]]){
+        let size = 0;
+        nodesList.forEach((list)=>{
+            size+=list.length
+        })
+        this._resultElement.innerHTML=`${year}年は${size}件注文がありました(非表示要素は含まれません)。`;
     }
 
     createGetViews(createCount) {

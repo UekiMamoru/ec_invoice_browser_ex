@@ -27,6 +27,7 @@ function amazonOrderPage() {
     amazonHistoryCtrlLock.logger = viewLogger;
     let progressElement = document.createElement("progress");
     const loaderEffect = new LoaderEffect(progressElement);
+    let cache = {};
     loaderEffect.hide();
 
     const EXEC_ELEMENT_ID = `ecInvoiceExec`;
@@ -35,6 +36,7 @@ function amazonOrderPage() {
     const LOG_MESSAGE_FIELD = `ecLogMsgField`;
     const PDF_GET_AND_DOWNLOAD_CHOICE_ID = `ecPdfGetAndDownload`;
     const PROGRESS_WRAP_ID = `ecProgressBarWrap`;
+    const RESULT_FIELD="ecResultField";
     amazonHistoryCtrlLock.lockTargetSelectors = [
         `#${EXEC_ELEMENT_ID}`,
         `#${EXEC_YEAR_PRODUCT_LIST_ID}`,
@@ -107,18 +109,34 @@ function amazonOrderPage() {
         // 選択期間の取得
         year = year.trim().replaceAll(/[^0-9]/ig, "")
         try {
-
             document.querySelector(".a-pagination").style.display = "none";
         } catch (e) {
 
         }
-        // ページネーション
+        // キャッシュがあったらキャッシュで描画する
+        // キャッシュの有効期限があるので、最後の取得から5分以内はキャッシュ利用
         let vm = new TermProductDataInsertVM();
         vm.year = year;
         vm.inserter = new ProductDataInserter();
+        // ページネーション
         vm.logger = viewLogger;
-        vm.progress = loaderEffect
-        return await vm.exec();
+        vm.progress = loaderEffect;
+        vm.resultElement = document.querySelector(`#${RESULT_FIELD}`)
+        if (cache[year]) {
+            vm.execDraw(cache[year])
+            return;
+        }
+
+        // 非表示
+        try {
+            document.querySelector(`form[action="/your-orders/orders"]`).style.display = "none";
+        } catch (e) {
+
+        }
+
+        let result = await vm.exec();
+        cache[year] = result;
+        return;
     }
 
     async function firstDataInsert() {
@@ -467,6 +485,7 @@ function amazonOrderPage() {
             </div>
             </div>
             </div>
+            <div id="${RESULT_FIELD}"></div>
         </div>
         `;
 
