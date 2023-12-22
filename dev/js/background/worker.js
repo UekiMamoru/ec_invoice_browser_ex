@@ -92,13 +92,14 @@ chrome.runtime.onMessage.addListener(
             let isInvoice = message.isInvoice;
             let param = message.param
             let pdfStrs = message.pdfStrs
+            let orderObj = message.orderObj;
             chrome.storage.local.get(list, (result) => {
                 let data = result[key];
                 // もしデータがなければ配列にする
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = { fileName, isInvoice, pdfStrs, param}
+                data[orderNumber] = { fileName, isInvoice, pdfStrs, param,orderObj}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })

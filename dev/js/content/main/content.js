@@ -379,7 +379,8 @@ function amazonOrderPage() {
                             pdfStrs,
                             fileName,
                             isInvoice,
-                            param
+                            param,
+                            orderObj:data
                         };
                         chrome.runtime.sendMessage(sendVal, () => {
                             exportUserLogMsg(`[${id}]のPDF情報のキャッシュが完了しました`)
