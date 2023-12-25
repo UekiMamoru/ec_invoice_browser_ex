@@ -10,6 +10,7 @@ module.exports = {
         "worker": "./dev/js/background/worker.js",
 
         "option/invoice-history": "./dev/ts/react/main/ec-invoice-history.tsx",
+        "option": "./dev/ts/react/main/option.tsx",
         "action/popup": "./dev/ts/react/main/popup.tsx"
     },
     devtool: false,

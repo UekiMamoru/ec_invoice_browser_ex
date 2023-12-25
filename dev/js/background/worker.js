@@ -10,7 +10,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         // 現在のバージョンを取得
         const currentVersion = chrome.runtime.getManifest().version;
 
-        if (previousVersion<currentVersion) {
+        if (previousVersion < currentVersion) {
             // とりあえずバージョンアップ時は削除
             flush();
         }
@@ -92,14 +92,13 @@ chrome.runtime.onMessage.addListener(
             let isInvoice = message.isInvoice;
             let param = message.param
             let pdfStrs = message.pdfStrs
-            let orderObj = message.orderObj;
             chrome.storage.local.get(list, (result) => {
                 let data = result[key];
                 // もしデータがなければ配列にする
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = { fileName, isInvoice, pdfStrs, param,orderObj}
+                data[orderNumber] = { fileName, isInvoice, pdfStrs, param}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })
