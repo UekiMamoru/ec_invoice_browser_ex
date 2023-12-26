@@ -1,0 +1,20 @@
+@import "./globals";
+
+.navigation {
+  display: flex;
+  list-style: none;
+  a{
+    font-weight: var(--font-weight-6);
+    display: block;
+    padding: var(--size-2) var(--size-3);
+  }
+
+  .link {
+    background: var(--gradient-18);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .activeLink {
+    color: var(--gray-8);
+  }
+}

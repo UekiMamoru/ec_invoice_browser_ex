@@ -16,20 +16,19 @@ const Exporter = (siteHistoryResultProp: EcHistoryLinkParam) => {
     let dataObject = ecResultCheck(geSiteData(siteName))
     console.log(dataObject);
     let entit = Object.entries(dataObject);
-    if(entit.length){
+    let len = entit.length
+    return (
+        <>
+            {len>0&&(
 
-        return (
-            <div><button id="ecHistory" onClick={()=>{
-                    let url = chrome.runtime.getURL(`option/ec-invoice-history.html?ec=${siteName}`);
+                <div><button id="ecHistory" onClick={()=>{
+                    let url = chrome.runtime.getURL(`option/index.html?target=history&ec=${siteName}`);
                     chrome.tabs.create({url})
                 }
-            }><a >amazonの取得履歴ページを開く</a></button></div>
-        )
-    }else{
-        return (
-            <span></span>
-        )
-    }
+                }><a >amazonの取得履歴ページを開く</a></button></div>
+            )}
+        </>
+    )
 }
 function ecResultCheck(ecResult: HistoryResult) {
     if (ecResult.status) {

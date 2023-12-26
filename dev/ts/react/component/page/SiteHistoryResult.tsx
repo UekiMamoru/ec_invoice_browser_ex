@@ -19,20 +19,17 @@ const Exporter = (siteHistoryResultProp: SiteHistoryResultProp) => {
     let dataObject = ecResultCheck(geSiteData(siteName))
     console.log(dataObject);
     let entit = Object.entries(dataObject);
-    if(entit.length){
-
-        return (
-            <div>{
-                entit.map(data=>
+    let len = entit.length;
+    return (
+        <>
+            <p>結果</p>
+            {len > 0 ? (<div>{
+                entit.map(data =>
                     <p key={data[0]}>{data[0]}</p>
                 )
-            }</div>
-        )
-    }else{
-        return (
-            <div>データはありませんでした。</div>
-        )
-    }
+            }</div>) : (<p>履歴はありませんでした。</p>)}
+        </>
+    )
 }
 
 function ecResultCheck(ecResult: HistoryResult) {

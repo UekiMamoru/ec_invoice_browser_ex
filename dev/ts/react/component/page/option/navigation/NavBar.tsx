@@ -1,15 +1,17 @@
 import {NavLink} from "react-router-dom";
-type NavProp ={name:string,to:string}
+import nav from '../../../../../../css/nav.module.css';
+
+type NavProp = { name: string, to: string }
 
 const NavBar = () => {
     return (
         <nav>
-            <ul>
+            <ul className={nav.navigation}>
                 <li>
-                    <OptionNavLink name={"TOP"} to={"/option/index.html"}/>
+                    <OptionNavLink name={"TOP"} to={"/index.html"}/>
                 </li>
                 <li>
-                    <OptionNavLink name={"Amazon履歴"} to={"/option/history/amazon"}/>
+                    <OptionNavLink name={"Amazon履歴"} to={"/history/amazon"}/>
                 </li>
             </ul>
         </nav>
@@ -18,22 +20,17 @@ const NavBar = () => {
     )
 }
 
-function OptionNavLink(props : NavProp) {
-    let name : string = props.name;
-    let to :string = props.to;
+function OptionNavLink(props: NavProp) {
+    let name: string = props.name;
+    let to: string = props.to;
+    let linkNav = nav.link;
+    let linkNavActive = nav.activeLink;
     return (
         <NavLink to={to}
-                 style={({isActive, isPending, isTransitioning}) => {
-                     return {
-                         fontWeight: isActive ? "bold" : "",
-                         color: isPending ? "red" : "black",
-                         viewTransitionName: isTransitioning ? "slide" : "",
-                     };
-                 }}
                  className={({isActive, isPending, isTransitioning}) =>
                      [
+                         isActive ? linkNavActive : linkNav,
                          isPending ? "pending" : "",
-                         isActive ? "active" : "",
                          isTransitioning ? "transitioning" : "",
                      ].join(" ")
                  }

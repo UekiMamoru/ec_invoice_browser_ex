@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ECインボイスダウンローダー",
   "short_name": "ECD",
-  "version": "0.0.11",
+  "version": "0.0.13",
   "default_locale": "ja",
   "icons": {
     "64": "/img/logo.png"
@@ -19,7 +19,8 @@
     "debugger",
     "downloads",
     "unlimitedStorage",
-    "offscreen"
+    "offscreen",
+    "identity"
   ],
   "background": {
     "service_worker": "/js/worker.js"
@@ -61,5 +62,11 @@
       ]
     }
   ],
-  "options_page": "/option/index.html"
+  "options_page": "/option/index.html",
+  "oauth2": {
+    "client_id": "1058695333901-7u1hkb9fedvrptba7pav7se1oma8v0bp.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email"
+    ]
+  }
 }

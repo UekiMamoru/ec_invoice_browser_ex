@@ -1,17 +1,25 @@
-import {BrowserRouter,Route,Routes} from "react-router-dom";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {Home} from "../Home";
-import {History} from "../History";
-import {NotFound} from "../NotFound";
 import NavBar from "../navigation/NavBar";
+import {EcInvoiceHistory} from "../../../../main/EcInvoiceHistory";
+import header from "../../../../../../css/header.module.scss"
+import {useEffect} from "react";
 
-
-export const OptionRoute=()=>{
+export const OptionRoute = () => {
+    let title = chrome.runtime.getManifest().name;
     return (
-        <BrowserRouter>
-            <NavBar/>
+
+        <BrowserRouter basename="/option">
+            <header className={header.header}>
+                <div className={header.field}>
+
+                    <div>{title}</div>
+                    <NavBar/>
+                </div>
+            </header>
             <Routes>
-                <Route path="/option/index.html" element={<Home/>}/>
-                <Route path="/option/history/:id" element={<History/>}/>
+                <Route path="/index.html" element={<Home/>}/>
+                <Route path="/history/:id" element={<EcInvoiceHistory/>}/>
             </Routes>
         </BrowserRouter>
     )

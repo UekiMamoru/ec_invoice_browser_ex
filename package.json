@@ -9,10 +9,18 @@
     "@types/chrome": "^0.0.254",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
+    "css-loader": "^6.8.1",
+    "firebase": "^10.7.1",
+    "open-props": "^1.6.16",
     "pdfjs-dist": "^4.0.269",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1",
+    "sass": "^1.69.5",
+    "sass-loader": "^13.3.3",
+    "scss": "^0.2.4",
+    "scss-loader": "^0.0.1",
+    "style-loader": "^3.3.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",
     "webpack": "^5.89.0",
@@ -20,6 +28,8 @@
   },
   "scripts": {
     "dev": "webpack --config webpack.config.js",
+    "watch-dev": "webpack --config webpack.config.js --watch",
     "build": "webpack --mode=production"
-  }
+  },
+  "homepage": "/option"
 }

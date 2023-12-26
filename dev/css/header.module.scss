@@ -1,0 +1,17 @@
+@import "globals";
+
+.header {
+  display: flex;
+  list-style: none;
+  background-image: var(--gradient-15);
+  justify-content: center;
+  align-items: center;
+
+  .field {
+    width: var(--size-lg);
+    display: flex;
+    padding: var(--size-1);
+    justify-content: space-between;
+    align-items: center;
+  }
+}

@@ -9,7 +9,6 @@ module.exports = {
         "content": "./dev/js/content/main/content.js",
         "worker": "./dev/js/background/worker.js",
 
-        "option/invoice-history": "./dev/ts/react/main/ec-invoice-history.tsx",
         "option": "./dev/ts/react/main/option.tsx",
         "action/popup": "./dev/ts/react/main/popup.tsx"
     },
@@ -31,6 +30,10 @@ module.exports = {
                 test: /\.tsx?$/,
                 // TypeScript をコンパイルする
                 use: "ts-loader"
+            }
+            , {
+                test: /\.(sass|scss|css)$/,
+                use: ['style-loader', 'css-loader', 'sass-loader']
             }
         ]
     },
