@@ -4,20 +4,20 @@ import {OrderInvoiceParam} from "./OrderInvoiceParam";
 export class OrderData {
 
     private _orderNumber: number = 0;
-    private _date: string ;
-    private _price: string;
-    private _isDigital: boolean;
-    private _productDataList: [ProductData];
-    private _isMultipleOrder: boolean;
-    private _isQualifiedInvoice: boolean;
-    private _isCreateInvoicePDF: boolean;
-    private _qualifiedInvoiceReason: string;
-    private _sellerContactURLs: [string];
-    private _invoiceId: string;
-    private _sellerURL: string;
-    private _sellerURLs: [string];
-    private _isCachePDF: boolean;
-    private _invoiceList: [OrderInvoiceParam];
+    private _date: string ="";
+    private _price: string="";
+    private _isDigital: boolean = false;
+    private _productDataList: ProductData[]=[];
+    private _isMultipleOrder: boolean = false;
+    private _isQualifiedInvoice: boolean = false;
+    private _isCreateInvoicePDF: boolean = false;
+    private _qualifiedInvoiceReason: string="";
+    private _sellerContactURLs: string[]=[];
+    private _invoiceId: string="";
+    private _sellerURL: string="";
+    private _sellerURLs: string[]=[];
+    private _isCachePDF: boolean=false;
+    private _invoiceList: OrderInvoiceParam[]=[];
 
 
     get orderNumber(): number {
@@ -52,11 +52,11 @@ export class OrderData {
         this._isDigital = value;
     }
 
-    get productDataList(): [ProductData] {
+    get productDataList(): ProductData[] {
         return this._productDataList;
     }
 
-    set productDataList(value: [ProductData]) {
+    set productDataList(value: ProductData[]) {
         this._productDataList = value;
     }
 
@@ -92,11 +92,11 @@ export class OrderData {
         this._qualifiedInvoiceReason = value;
     }
 
-    get sellerContactURLs(): [string] {
+    get sellerContactURLs(): string[] {
         return this._sellerContactURLs;
     }
 
-    set sellerContactURLs(value: [string]) {
+    set sellerContactURLs(value: string[]) {
         this._sellerContactURLs = value;
     }
 
@@ -116,11 +116,11 @@ export class OrderData {
         this._sellerURL = value;
     }
 
-    get sellerURLs(): [string] {
+    get sellerURLs(): string[] {
         return this._sellerURLs;
     }
 
-    set sellerURLs(value: [string]) {
+    set sellerURLs(value: string[]) {
         this._sellerURLs = value;
     }
 
@@ -132,11 +132,11 @@ export class OrderData {
         this._isCachePDF = value;
     }
 
-    get invoiceList(): [OrderInvoiceParam] {
+    get invoiceList(): OrderInvoiceParam[] {
         return this._invoiceList;
     }
 
-    set invoiceList(value: [OrderInvoiceParam]) {
+    set invoiceList(value: OrderInvoiceParam[]) {
         this._invoiceList = value;
     }
 }

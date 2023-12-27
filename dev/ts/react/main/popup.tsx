@@ -1,50 +1,52 @@
 import * as React from "react";
-import {SiteHistoryPageTitle} from "../component/page/SiteHistoryPageTitle";
-
 import {createRoot} from 'react-dom/client';
-import {SiteHistoryResult} from "../component/page/SiteHistoryResult";
 import {EcHistoryLink} from "../component/page/popup/EcHistoryLink";
+import { useState} from "react";
+import {FirebasePopupChromeAccountSingInV3} from "../../lib/FirebasePopupChromeAccountSingInV3";
 
 const container = document.getElementById('app');
-import {initializeApp} from "firebase/app";
-import {getAnalytics} from "firebase/analytics";
-import {getAuth, GoogleAuthProvider, signInWithCredential} from 'firebase/auth'
 
 const App = () => {
     let siteName = "amazon"
-    const firebaseConfig = {
-    }
-// Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-
-    console.log(app)
-    console.log(analytics)
-
-    initializeApp(firebaseConfig)
-    const auth = getAuth()
-
-// ChromeアプリからGoogleログインしてトークン取得
-    chrome.identity.getAuthToken(
-        {interactive: true}).then(
-        (result: chrome.identity.GetAuthTokenResult) => {
-            let token = result.token;
-            console.log('token', token)
-            // Googleログイン成功時に受け取るトークンを使ってGoogleのクレデンシャル作成
-            const credential = GoogleAuthProvider.credential(null, token)
-            console.log('credential:', credential)
-            console.log('auth:', auth)
-
-            // Googleユーザーのクレデンシャルを使ってサインイン
-            signInWithCredential(auth, credential).then((result: any) => {
-                console.log("Sign In Success", result)
-            }).catch((error: any) => {
-                console.log("Sign In Error", error)
-            })
+    let [credential, setCredential] = useState("");
+    const signIn = (event:React.MouseEvent<HTMLButtonElement>) => {
+        let target =event.currentTarget;
+        target.disabled = true;
+        let reader = `...`
+        let v = setInterval(()=>{
+            if(reader.length>3){
+                reader+=".";
+            }
+            setCredential(`現在取得中${reader}`)
+        },50)
+        let key = {
+            apiKey: "AIzaSyBnVUxAa-FsFpnC9wik1p1Lw0k-y--18S0",
+            authDomain: "chrome-ex-login-test.firebaseapp.com",
+            projectId: "chrome-ex-login-test",
+            storageBucket: "chrome-ex-login-test.appspot.com",
+            messagingSenderId: "1058695333901",
+            appId: "1:1058695333901:web:e0709d8cff1396001ced44",
+            measurementId: "G-1MYM0FMJX5"
         }
-    )
+
+        let v3 = new FirebasePopupChromeAccountSingInV3();
+        v3.signInWithCredential(key).then(result => {
+            clearInterval(v)
+            setCredential(`ユーザID:${result.user?.uid}`)
+        }).catch(er=>{
+            clearInterval(v)
+            setCredential("取得に失敗しました。")
+        }).finally(()=>{
+            target.disabled = false;
+
+        })
+    };
+
     return (
         <>
+            <p>サインイン</p>
+            <button onClick={signIn}>Googleで登録して利用を開始</button>
+            <p>{credential}</p>
             <button><a href="https://www.amazon.co.jp/gp/your-account/order-history"
                        target="_blank">Amazonの注文履歴を開く</a></button>
             <EcHistoryLink siteName={siteName}/>
@@ -53,5 +55,5 @@ const App = () => {
 };
 
 
-const root = createRoot(container!);// if you use TypeScript
+const root = createRoot(container!)
 root.render(<App/>);

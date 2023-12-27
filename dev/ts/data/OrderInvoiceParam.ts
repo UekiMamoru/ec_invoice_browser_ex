@@ -1,18 +1,18 @@
 export class OrderInvoiceParam {
-    private _fileIdx: number;
-    private _invoiceId: string;
+    private _fileIdx: number = 0;
+    private _invoiceId: string="";
     private _isCachePDF:
-        boolean;
+        boolean=false;
     private _isCreateInvoicePDF:
-        boolean;
+        boolean=false;
     private _isQualifiedInvoice:
-        boolean;
+        boolean=false;
     private _qualifiedInvoiceReason:
-        string;
+        string="";
     private _sellerContactURL:
-        string;
+        string="";
     private _sellerURL:
-        string;
+        string="";
 
 
     get fileIdx(): number {

@@ -1,5 +1,5 @@
 export class IndexedDBDAO {
-    _factory: IDBFactory;
+    _factory!: IDBFactory;
     _dbName: string = ""
     _ver: number = 1;
     _request!: IDBOpenDBRequest;
@@ -14,13 +14,13 @@ export class IndexedDBDAO {
         const upgrade = (ev: IDBVersionChangeEvent) => {
             this.upgrade(ev);
         }
-        this._request.db
+        // this._request.db
         this._request.addEventListener("upgradeneeded", upgrade);
-        const onerror = (ev)=>{
+        const onerror = (ev:Event)=>{
 
         }
-        const onsuccsee = (ev)=>{
-            this._
+        const onsuccsee = (ev:Event)=>{
+            // this._
         }
         this._request.addEventListener("success", onsuccsee);
     }
@@ -50,5 +50,6 @@ export class IndexedDBDAO {
 
 
     private createDataBase() {
+
     }
 }
