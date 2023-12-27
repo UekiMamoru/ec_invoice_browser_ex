@@ -20,7 +20,7 @@ export class FirebasePopupChromeAccountSingInV3 {
         const noValueKeys: string[] = [];
         requireKeys.forEach((key: string) => {
             if (conf.hasOwnProperty(key)) {
-                if (conf[key]) {
+                if (!conf[key]) {
                     noValueKeys.push(key);
                 }
             } else {
