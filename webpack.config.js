@@ -1,5 +1,6 @@
 const path = require('path');
-
+var webpack = require('webpack');
+const CopyPlugin = require("copy-webpack-plugin");
 module.exports = {
 
     //エントリポイントのJavaScript
@@ -18,7 +19,7 @@ module.exports = {
         filename: "[name].js",
         // path: path.resolve(__dirname, './public/js/'),
         //出力先のフォルダ
-        path: path.resolve(__dirname, './js/'),
+        path: path.resolve(path.join(__dirname, "dist"), './js/'),
         // //出力先のファイル名
         // filename: 'contents_script.js'
         // publicPath: "chrome-extension://epmlcnekeghifeojgdkkcodlgalkegdk/js/"
@@ -34,14 +35,29 @@ module.exports = {
             , {
                 test: /\.(sass|scss|css)$/,
                 use: ['style-loader', 'css-loader', 'sass-loader']
+            },
+            {
+                test: /\.jsx$/,
+                use: "esbuild-loader"
             }
         ]
     },
     // import 文で .ts や .tsx ファイルを解決するため
     resolve: {
-        extensions: [".ts", ".tsx", ".js", ".json"]
+        extensions: [".ts", ".tsx", ".js", "jsx", ".json"]
     },
     // ES5(IE11等)向けの指定（webpack 5以上で必要）
 
+    devServer: {
+        contentBase: "./dist",
+    },
 
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                {from: "public", to: "../"},
+
+            ],
+        }),
+    ],
 };

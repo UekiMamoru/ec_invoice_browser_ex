@@ -1,16 +1,25 @@
 {
   "compilerOptions": {
+    "outDir": "./dist/",
     "strict": true,
-    "module": "ES2022",
-    "target": "ES2022",
     "sourceMap": true,
+    // フロントエンドなら es2015, es2020, esnext を指定。バックエンドならcommonjsを指定,
+    "module": "ES2022",
+    "moduleResolution": "node",
+    // 出力するjsの形式 拡張機能ベースならES5対応の必要が無い,
+    "target": "ES2022",
+    "allowJs": true,
     "jsx": "react-jsx",
-    "moduleResolution": "Node",
     "lib": [
       "ES2022","DOM",
     ]
   },
+  "include": [
+    "dev/ts/**/*",
+    "dev/ts/css.conf.d.ts"
+  ],
   "exclude": [
+    "dist",
     "node_modules"
   ]
 }
