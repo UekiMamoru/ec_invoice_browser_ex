@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction} from "react";
+import button from "../../../../../css/amazon/style.modules.css"
 
 export const CreateInvoice = (prop: {
     callback: Function,
@@ -9,7 +9,7 @@ export const CreateInvoice = (prop: {
     return (
 
 
-        <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        <button className={button.button} onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             callback(true);
             createInvoiceData();
             setTimeout(() => {
