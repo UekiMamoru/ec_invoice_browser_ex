@@ -7,10 +7,11 @@ module.exports = {
     entry: {
 
         'pdf': "./dev/js/pdf.js",
-        "content": "./dev/js/content/main/content.js",
+        // "content": "./dev/js/content/main/content.js",
         "worker": "./dev/js/background/worker.js",
 
         "option": "./dev/ts/react/main/option.tsx",
+        "content": "./dev/ts/react/main/amazon/amazonProductBuyHistory.tsx",
         "action/popup": "./dev/ts/react/main/popup.tsx"
     },
     devtool: false,

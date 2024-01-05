@@ -26,11 +26,11 @@ const Exporter = (siteHistoryResultProp: EcHistoryLinkParam) => {
         <>
             {len > 0 && (
                 <div>
-                    <button id="ecHistory" onClick={() => {
+                    <button id="ecHistory" className={"btn"} onClick={() => {
                         let url = chrome.runtime.getURL(`option/index.html?target=history&ec=${siteName}`);
                         chrome.tabs.create({url})
                     }
-                    }><a>amazonの取得履歴ページを開く</a></button>
+                    }>amazonの取得履歴ページを開く</button>
                 </div>
             )}
         </>
