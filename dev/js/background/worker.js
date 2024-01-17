@@ -1,6 +1,7 @@
 import {Thread} from "../content/util/Thread";
 
-const EC_KEY_PREFIX = "ec_"
+const EC_KEY_PREFIX = "ec_";
+let lastData  ;
 // バージョンが古い場合でフラッシュ
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === "update") {
@@ -90,27 +91,29 @@ chrome.runtime.onMessage.addListener(
             let orderNumber = message.orderNumber
             let fileName = message.fileName;
             let isInvoice = message.isInvoice;
-            let param = message.param
+            let amazonInvoiceObj = message.amazonInvoiceObj
             let pdfStrs = message.pdfStrs
+            let orderObj = message.orderObj
             chrome.storage.local.get(list, (result) => {
                 let data = result[key];
                 // もしデータがなければ配列にする
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = { fileName, isInvoice, pdfStrs, param}
+                data[orderNumber] = {fileName, isInvoice, pdfStrs, amazonInvoiceObj, orderObj}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })
             });
         } else if (message.hasOwnProperty("type") && message.type === "invoice-result") {
+            lastData = message;
             chrome.tabs.create({url: chrome.runtime.getURL("option/invoice-result.html")}).then(
                 (tab) => {
                     let id = tab.id;
                     Thread.sleep(500).then(
                         () => {
-                            console.log(message);
-                            chrome.tabs.sendMessage(id, message);
+                            console.log(lastData);
+                            chrome.tabs.sendMessage(id, lastData);
                         }
                     )
                 }
@@ -120,6 +123,8 @@ chrome.runtime.onMessage.addListener(
             chrome.runtime.sendMessage(offscreenMessage, (result) => {
                 callback(result);
             })
+        } else if (message.hasOwnProperty("type") && message.type === "get-last-data") {
+            callback(lastData);
         }
 
         return true;

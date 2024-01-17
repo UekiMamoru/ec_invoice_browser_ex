@@ -11,6 +11,7 @@ module.exports = {
         "worker": "./dev/js/background/worker.js",
 
         "option": "./dev/ts/react/main/option.tsx",
+        "history-result": "./dev/ts/react/main/history-result.tsx",
         "content": "./dev/ts/react/main/amazon/amazonProductBuyHistory.tsx",
         "action/popup": "./dev/ts/react/main/popup.tsx"
     },

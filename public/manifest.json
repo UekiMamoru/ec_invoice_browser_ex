@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ECインボイスダウンローダー",
-  "short_name": "ECD",
-  "version": "0.0.13",
+  "name": "Amazonインボイスダウンローダー",
+  "short_name": "Amazonインボイスダウンローダー",
+  "version": "0.1.0",
   "default_locale": "ja",
   "icons": {
     "64": "/img/logo.png"
@@ -63,11 +63,5 @@
     }
   ],
   "options_page": "/option/index.html",
-  "oauth2": {
-    "client_id": "1058695333901-7u1hkb9fedvrptba7pav7se1oma8v0bp.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email"
-    ]
-  },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs4BIHRPQEX/27P7M02TVxOrtjaIVJZ5EiiFR/KN+LHpxiOaP9TEdQAkJtmB1YLZTUfe1ylhMXlUE4rvdXZY5XouHewYI7OnHnw8FsW2CWg1U/qzbgeCzg/fOTjYB5VkZ0Lq0IKZaVC9D8lpGEVVo09GHV8UDFfle2TeYWLjs3sDTwO6fJkv5+Y/F6QOu6Rqns0Mdc3GypeHAEIjxXXPIujFHgbfL7O+ef3d7VT6fMH/ncOoNf5gDvDZQrrEaCA6gWqyOQXcoIMuF7RfY81cPJcPEBruA9pIn5FKNT82hggZSDv1qT8hnUypydWZg3VEQ+P2pqyu73V7hNaqWrXKXAwIDAQAB"
 }

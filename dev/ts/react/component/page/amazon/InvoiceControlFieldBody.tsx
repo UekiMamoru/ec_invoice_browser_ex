@@ -1,11 +1,16 @@
 import {JSX, ReactEventHandler, useEffect, useState} from "react";
 import {CreateInvoice} from "./CreateInvoice";
+import {ViewLogger} from "../../view/ViewLogger";
+import {LoaderEffect} from "../../util/LoaderEffect";
+import {TermProductDataInsertVM} from "../../vm/TermProductDataInsertVM";
+import {ProductDataInserter} from "../../view/ProductDataInserter";
 
+const cache: { [key: string]: { target: string, data: Element[][], lastIndex: number } } = {};
 export const InvoiceControlFieldBody = () => {
     let optionList = nowLastYearList();
     let options = optionElementToJSXElement(optionList);
     let [disabled, setDisabled] = useState(false);
-    let [selectValue, setSelectValue] = useState("");
+    let [selectValue, setSelectValue] = useState("")
 
 
     useEffect(() => {
@@ -13,7 +18,8 @@ export const InvoiceControlFieldBody = () => {
         if (!selectValue) {
             disabledChange(false);
             return
-        };
+        }
+        ;
         setTimeout(() => {
             disabledChange(false);
         }, 1000)
@@ -33,7 +39,11 @@ export const InvoiceControlFieldBody = () => {
                     <select defaultValue={selectValue} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         disabledChange(true);
                         setSelectValue(e.currentTarget.value);
-                        change(e);
+                        change(e).then(e => {
+
+                        }).finally(() => {
+                            disabledChange(false);
+                        });
                     }} disabled={disabled}>
                         {options}
                     </select>
@@ -59,11 +69,55 @@ function optionElementToJSXElement(optionList: HTMLOptionElement[]): JSX.Element
         }))}</>)
 }
 
-function change(e: React.ChangeEvent<HTMLSelectElement>) {
+async function change(e: React.ChangeEvent<HTMLSelectElement>) {
     let selectElement = e.currentTarget;
     if (selectElement.value) {
+        let year = selectElement.value;
+        year = year.trim().replaceAll(/[^0-9]/ig, "");
+        try {
+            let pagi = document.querySelector(".a-pagination");
+            if (pagi instanceof HTMLElement) {
+                pagi.style.display = "none";
+            }
+        } catch (e) {
 
+        }
+        let vm = new TermProductDataInsertVM();
+        vm.year = year;
+        vm.inserter = new ProductDataInserter();
+        // ページネーション
+        let logger = new ViewLogger();
+        logger.field = document.createElement("div");
+        vm.logger = logger
+        vm.progress = new LoaderEffect(getProgressElement());
+        vm.resultElement = getResultElement();//document.querySelector(`#${RESULT_FIELD}`)
+        if (cache[year]) {
+            vm.execDraw(cache[year])
+            return;
+        }
+
+        // 非表示
+        try {
+            let element =
+                document.querySelector(`form[action="/your-orders/orders"]`)
+            if (element instanceof HTMLElement) {
+                element.style.display = "none";
+            }
+        } catch (e) {
+
+        }
+
+        let result: { target: string, data: Element[][], lastIndex: number } = await vm.exec();
+        cache[year] = result;
     }
+}
+
+function getProgressElement() {
+    return document.createElement("progress")
+}
+
+function getResultElement() {
+    return document.createElement("div");
 }
 
 /**
