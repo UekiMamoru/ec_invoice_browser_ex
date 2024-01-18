@@ -21,16 +21,18 @@ export const CreateInvoice = (prop: {
     return (
 
         <>
-            <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                callback(true);
-                createInvoiceData();
-                createList(isDigital, callback)
-            }} disabled={getState()}>
-                ページに表示された注文情報のインボイスデータを作る
-            </button>
-            <label><input type="checkbox" checked={isDigital} onChange={() => {
-                setIsDigital(!isDigital);
-            }}/>デジタル含める</label>
+            <div style={{display: "flex", gap: ".5em"}}>
+                <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    callback(true);
+                    createInvoiceData();
+                    createList(isDigital, callback)
+                }} disabled={getState()}>
+                    表示された注文情報のインボイスデータを作成
+                </button>
+                <label><input type="checkbox" disabled={getState()} checked={isDigital} onChange={() => {
+                    setIsDigital(!isDigital);
+                }}/>デジタル含める</label>
+            </div>
         </>
 
     )

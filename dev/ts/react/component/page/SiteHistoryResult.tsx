@@ -1,6 +1,8 @@
 import {HistoryResult, OrderHistoryDataModel} from "../../../model/OrderHistoryDataModel";
 import {Suspense, useEffect, useState} from "react";
 import * as React from "react";
+import {HistoryField} from "./option/field/HistoryField";
+import {AmazonResultTransferObject} from "../../types";
 
 type SiteHistoryResultProp = { siteName: string }
 let cache = {}
@@ -22,17 +24,12 @@ const Exporter = (siteHistoryResultProp: SiteHistoryResultProp) => {
     let len = entit.length;
     return (
         <>
-            <p>結果</p>
-            {len > 0 ? (<div>{
-                entit.map(data =>
-                    <p key={data[0]}>{data[0]}</p>
-                )
-            }</div>) : (<p>履歴はありませんでした。</p>)}
+            <HistoryField data={dataObject}/>
         </>
     )
 }
 
-function ecResultCheck(ecResult: HistoryResult) {
+function ecResultCheck(ecResult: HistoryResult):AmazonResultTransferObject[] {
     if (ecResult.status) {
         return ecResult.data;
     }

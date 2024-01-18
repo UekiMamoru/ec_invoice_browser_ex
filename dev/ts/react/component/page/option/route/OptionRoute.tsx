@@ -3,7 +3,7 @@ import {Home} from "../Home";
 import NavBar from "../navigation/NavBar";
 import {EcInvoiceHistory} from "../../../../main/EcInvoiceHistory";
 import header from "../../../../../../css/header.module.scss"
-import {useEffect} from "react";
+import layout from "../../../../../../css/layout.module.scss"
 
 export const OptionRoute = () => {
     let title = chrome.runtime.getManifest().name;
@@ -17,10 +17,12 @@ export const OptionRoute = () => {
                     <NavBar/>
                 </div>
             </header>
-            <Routes>
-                <Route path="/index.html" element={<Home/>}/>
-                <Route path="/history/:id" element={<EcInvoiceHistory/>}/>
-            </Routes>
+            <main role="main" className={layout.layout}>
+                <Routes>
+                    <Route path="/index.html" element={<Home/>}/>
+                    <Route path="/history/:id" element={<EcInvoiceHistory/>}/>
+                </Routes>
+            </main>
         </BrowserRouter>
     )
 }

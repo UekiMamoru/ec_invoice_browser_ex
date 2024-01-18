@@ -93,14 +93,14 @@ chrome.runtime.onMessage.addListener(
             let isInvoice = message.isInvoice;
             let amazonInvoiceObj = message.amazonInvoiceObj
             let pdfStrs = message.pdfStrs
-            let orderObj = message.orderObj
+            let amazonOrderDataObj = message.amazonOrderDataObj
             chrome.storage.local.get(list, (result) => {
                 let data = result[key];
                 // もしデータがなければ配列にする
                 if (!data) {
                     data = {};
                 }
-                data[orderNumber] = {fileName, isInvoice, pdfStrs, amazonInvoiceObj, orderObj}
+                data[orderNumber] = {fileName, isInvoice, pdfStrs, amazonInvoiceObj, amazonOrderDataObj}
                 chrome.storage.local.set({[key]: data}, result => {
                     callback();
                 })
