@@ -4,8 +4,12 @@ import {ViewLogger} from "../../view/ViewLogger";
 import {LoaderEffect} from "../../util/LoaderEffect";
 import {TermProductDataInsertVM} from "../../vm/TermProductDataInsertVM";
 import {ProductDataInserter} from "../../view/ProductDataInserter";
+import {LoaderField} from "../../../../model/LoaderField";
 
 const cache: { [key: string]: { target: string, data: Element[][], lastIndex: number } } = {};
+const loaderField = new LoaderField();
+const viewLogger = new ViewLogger();
+viewLogger.field = loaderField.msgBox;
 export const InvoiceControlFieldBody = () => {
     let optionList = nowLastYearList();
     let options = optionElementToJSXElement(optionList);
@@ -33,20 +37,23 @@ export const InvoiceControlFieldBody = () => {
     const getSelectValue = () => selectValue;
     return (
         <>
-            <div>
-                <div>
-                    <span>表示する年を選択：</span>
-                    <select defaultValue={selectValue} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                        disabledChange(true);
-                        setSelectValue(e.currentTarget.value);
-                        change(e).then(e => {
+            <div style={{padding: ".5em"}}>
+                <div style={{display: "flex", gap: "1.5em", alignItems: "center"}}>
+                    <div>
 
-                        }).finally(() => {
-                            disabledChange(false);
-                        });
-                    }} disabled={disabled}>
-                        {options}
-                    </select>
+                        <span>表示する年を選択： </span>
+                        <select defaultValue={selectValue} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                            disabledChange(true);
+                            setSelectValue(e.currentTarget.value);
+                            change(e).then(e => {
+
+                            }).finally(() => {
+                                disabledChange(false);
+                            });
+                        }} disabled={disabled}>
+                            {options}
+                        </select>
+                    </div>
                     <CreateInvoice callback={disabledChange} getState={getState}/>
                 </div>
                 <div>
@@ -82,33 +89,34 @@ async function change(e: React.ChangeEvent<HTMLSelectElement>) {
         } catch (e) {
 
         }
+        loaderField.show();
+        viewLogger.field = loaderField.msgBox;
         let vm = new TermProductDataInsertVM();
         vm.year = year;
         vm.inserter = new ProductDataInserter();
         // ページネーション
-        let logger = new ViewLogger();
-        logger.field = document.createElement("div");
-        vm.logger = logger
+        vm.logger = viewLogger
         vm.progress = new LoaderEffect(getProgressElement());
         vm.resultElement = getResultElement();//document.querySelector(`#${RESULT_FIELD}`)
         if (cache[year]) {
             vm.execDraw(cache[year])
-            return;
-        }
+        } else {
+            // 非表示
+            try {
+                let element =
+                    document.querySelector(`form[action="/your-orders/orders"]`)
+                if (element instanceof HTMLElement) {
+                    element.style.display = "none";
+                }
+            } catch (e) {
 
-        // 非表示
-        try {
-            let element =
-                document.querySelector(`form[action="/your-orders/orders"]`)
-            if (element instanceof HTMLElement) {
-                element.style.display = "none";
             }
-        } catch (e) {
 
+            let result: { target: string, data: Element[][], lastIndex: number } = await vm.exec();
+            cache[year] = result;
         }
+        loaderField.hide();
 
-        let result: { target: string, data: Element[][], lastIndex: number } = await vm.exec();
-        cache[year] = result;
     }
 }
 

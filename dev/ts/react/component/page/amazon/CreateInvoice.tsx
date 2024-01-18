@@ -8,8 +8,13 @@ import {
 import {PDFDownloader} from "../../../../model/PDFDownloader";
 import {PDFBufferData} from "../../../../model/PDFBufferData";
 import {useState} from "react";
+import {LoaderField} from "../../../../model/LoaderField";
+import {ViewLogger} from "../../../../view/ViewLogger";
 
 const AMAZON_EC_NAME = "amazon";
+const loaderField = new LoaderField();
+const viewLogger = new ViewLogger();
+viewLogger.field = loaderField.msgBox;
 
 export const CreateInvoice = (prop: {
     callback: Function,
@@ -42,11 +47,21 @@ function createInvoiceData() {
 }
 
 function exportUserLogMsg(msg: string) {
-
+    viewLogger.log(msg);
 }
 
-async function createList(includeDigital: boolean = false, callback: Function) {
+function fieldOpen() {
+    loaderField.flashMsg();
+    loaderField.show();
+}
 
+function fieldClose() {
+    loaderField.hide();
+}
+
+
+async function createList(includeDigital: boolean = false, callback: Function) {
+    fieldOpen();
     let isPdfGetAndDownload = true;// document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
     let pdfGetAndDownloadMsg = `PDF取得とダウンロードを同時に行います`
     if (!isPdfGetAndDownload) {
@@ -293,6 +308,7 @@ async function createList(includeDigital: boolean = false, callback: Function) {
     if (callback) {
         callback(false);
     }
+    fieldClose()
 }
 
 

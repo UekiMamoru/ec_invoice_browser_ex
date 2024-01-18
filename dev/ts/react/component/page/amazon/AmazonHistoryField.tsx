@@ -4,7 +4,7 @@ import {InvoiceControlFieldBody} from "./InvoiceControlFieldBody";
 export const AmazonHistoryField = () => {
     return (
         <>
-        <div>
+        <div style={{border:"solid 1px #ccc"}}>
             <InvoiceControlFieldHeader/>
             <InvoiceControlFieldBody/>
         </div>
