@@ -7,6 +7,7 @@ import {
 } from "../../../types";
 import {PDFDownloader} from "../../../../model/PDFDownloader";
 import {PDFBufferData} from "../../../../model/PDFBufferData";
+import {useState} from "react";
 
 const AMAZON_EC_NAME = "amazon";
 
@@ -15,17 +16,22 @@ export const CreateInvoice = (prop: {
     getState: Function
 }) => {
     let {callback, getState} = prop;
+    let [isDigital, setIsDigital] = useState(false);
 
     return (
 
-
-        <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-            callback(true);
-            createInvoiceData();
-            createList(false, callback)
-        }} disabled={getState()}>
-            ページに表示された注文情報のインボイスデータを作る
-        </button>
+        <>
+            <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                callback(true);
+                createInvoiceData();
+                createList(isDigital, callback)
+            }} disabled={getState()}>
+                ページに表示された注文情報のインボイスデータを作る
+            </button>
+            <label><input type="checkbox" checked={isDigital} onChange={() => {
+                setIsDigital(!isDigital);
+            }}/>デジタル含める</label>
+        </>
 
     )
 }
@@ -290,10 +296,10 @@ async function createList(includeDigital: boolean = false, callback: Function) {
 
 function createOrders(): AmazonOrderDataObj[] {
     let orderNodes = Array.from(document.querySelectorAll(`.js-order-card`))
-    // .filter(e => {
-    //     let parentElement = e.parentElement;
-    //     return (parentElement && parentElement.classList.contains(`js-order-card`))
-    // });
+        .filter(e => {
+            // 子どもに同じようにあったら含めない
+            return e.querySelectorAll(`.js-order-card`).length < 1
+        });
     let list: AmazonOrderDataObj[] = []
     orderNodes.forEach(
         node => {
