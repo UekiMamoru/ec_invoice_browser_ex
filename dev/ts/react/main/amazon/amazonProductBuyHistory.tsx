@@ -9,9 +9,8 @@ if (isOrderPage()) {
 }
 
 function isOrderPage() {
-    return location.pathname.match('/gp/your-account/order-history')
-        || location.pathname.match("/gp/css/order-history")
-        || location.pathname.match(`/your-orders/orders`)
+    return location.pathname.match(`/your-orders/orders`)
+    || location.pathname.match(/\/gp\/([a-z,0-9,-]|_)+\/order-history/)
 }
 
 function buildField() {

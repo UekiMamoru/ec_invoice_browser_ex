@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazonインボイスダウンローダー",
   "short_name": "Amazonインボイスダウンローダー",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "default_locale": "ja",
   "icons": {
     "64": "/img/logo.png"

@@ -211,7 +211,7 @@ export class TermProductDataInsertVM {
     }
 
     accessURL(param: { [key: string]: string } = {}) {
-        let base = `/gp/your-account/order-history`;
+        let base = `/gp/legacy/order-history`;
         let queryList: string[] = []
         Object.keys(param).forEach((key) => {
             queryList.push(`${key}=${param[key]}&`)

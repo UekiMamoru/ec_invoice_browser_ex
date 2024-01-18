@@ -22,9 +22,7 @@ export const CreateInvoice = (prop: {
         <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             callback(true);
             createInvoiceData();
-            createList(false).finally(() => {
-                callback(false)
-            })
+            createList(false, callback)
         }} disabled={getState()}>
             ページに表示された注文情報のインボイスデータを作る
         </button>
@@ -39,7 +37,7 @@ function exportUserLogMsg(msg: string) {
 
 }
 
-async function createList(includeDigital: boolean = false) {
+async function createList(includeDigital: boolean = false, callback: Function) {
 
     let isPdfGetAndDownload = true;// document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
     let pdfGetAndDownloadMsg = `PDF取得とダウンロードを同時に行います`
@@ -76,7 +74,7 @@ async function createList(includeDigital: boolean = false) {
             if (result.state) {
                 exportUserLogMsg(`キャッシュに存在していたため、キャッシュデータを利用します。`)
                 let data = result.data
-                amazonInvoiceObj = result.data.param//.invoiceList;
+                amazonInvoiceObj = result.data.amazonInvoiceObj//.invoiceList;
                 //
                 data.pdfStrs.forEach((pdfStr: string, idx: number) => {
                     let fileName = `tmp_${result.data.fileName}${idx > 1 ? idx - 1 : ""}`;
@@ -272,7 +270,7 @@ async function createList(includeDigital: boolean = false) {
 
         }
 
-        await Thread.sleep(500);
+        await Thread.sleep(300);
         exportUserLogMsg(`${amazonOrderDataObj.no}の処理が終了しました`)
     }
 
@@ -283,15 +281,19 @@ async function createList(includeDigital: boolean = false) {
     chrome.runtime.sendMessage(
         {type: "invoice-result", site: "Amazon", data: resultOrderOutputs}
     )
+
+    if (callback) {
+        callback(false);
+    }
 }
 
 
 function createOrders(): AmazonOrderDataObj[] {
     let orderNodes = Array.from(document.querySelectorAll(`.js-order-card`))
-        .filter(e => {
-            let parentElement = e.parentElement;
-            return (parentElement && parentElement.classList.contains(`js-order-card`))
-        });
+    // .filter(e => {
+    //     let parentElement = e.parentElement;
+    //     return (parentElement && parentElement.classList.contains(`js-order-card`))
+    // });
     let list: AmazonOrderDataObj[] = []
     orderNodes.forEach(
         node => {
@@ -411,15 +413,15 @@ async function getPDFArrayBuffer(
 
 
 function arrayBufferToStringSerializable(arrayBuff: ArrayBufferLike) {
-    return  PDFBufferData.arrayBufferToStringSerializable(arrayBuff);
+    return PDFBufferData.arrayBufferToStringSerializable(arrayBuff);
 }
 
 function arrayBuffSerializableStringToArrayBuff(str: string): ArrayBufferLike {
-    return  PDFBufferData.arrayBuffSerializableStringToArrayBuff(str);
+    return PDFBufferData.arrayBuffSerializableStringToArrayBuff(str);
 }
 
 function downloadPDF(arrayBuffer: ArrayBufferLike, fileName: string) {
-    PDFDownloader.downloadPDF(arrayBuffer,fileName);
+    PDFDownloader.downloadPDF(arrayBuffer, fileName);
 }
 
 
@@ -428,7 +430,7 @@ function downloadPDF(arrayBuffer: ArrayBufferLike, fileName: string) {
  * @param orderObj
  * @param param
  */
-function createOrderOutputObject(orderObj: AmazonOrderDataObj, param: AmazonInvoiceObj):AmazonResultTransferObject {
+function createOrderOutputObject(orderObj: AmazonOrderDataObj, param: AmazonInvoiceObj): AmazonResultTransferObject {
     let output = {
         orderNumber: orderObj.no,
         date: orderObj.date,
