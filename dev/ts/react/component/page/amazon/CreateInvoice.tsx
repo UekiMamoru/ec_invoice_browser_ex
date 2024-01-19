@@ -219,10 +219,13 @@ async function createList(includeDigital: boolean = false, callback: Function) {
                             let pdfResult = await chrome.runtime.sendMessage(
                                 decodeCheck
                             )
-
-                            copyParam.isQualifiedInvoice = pdfResult.isInvoice;//isInvoice;
-                            amazonInvoiceObj.isCreateInvoicePDF &&= pdfResult.isInvoice;
-                            amazonInvoiceObj.isCreateInvoicePDF = Boolean(amazonInvoiceObj.isCreateInvoicePDF)
+                            // PDF自体は出来ている
+                            copyParam.isCreateInvoicePDF = true;
+                            // 適格invoiceかどうか
+                            copyParam.isQualifiedInvoice = pdfResult.isInvoice;
+                            // 1個でも適格じゃなかったら適格じゃないと判断するため組み合わせ
+                            amazonInvoiceObj.isQualifiedInvoice &&= pdfResult.isInvoice;
+                            // amazonInvoiceObj.isCreateInvoicePDF = Boolean(amazonInvoiceObj.isCreateInvoicePDF)
                             copyParam.invoiceId = pdfResult.invoiceId
                             exportUserLogMsg(`PDF情報を解析が終了しました`)
                             if (pdfArrayBuffer) {

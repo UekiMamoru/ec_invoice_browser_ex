@@ -1,6 +1,7 @@
 import {AmazonOrderProductData, AmazonResultTransferObject} from "../../../../types";
 import {HistoryProductDataLink} from "./HistoryProductDataLink";
 import {QualifiedInvoiceField} from "./QualifiedInvoiceField";
+import {QualifiedNonInvoiceLink} from "./QualifiedNonInvoiceLink";
 
 type AmazonResultTransfer = {
     amazonResultTransferObject: AmazonResultTransferObject, idx: number
@@ -11,7 +12,7 @@ export const HistoryTableRow = (prop: AmazonResultTransfer) => {
     return (
         <>
             <tr>
-                <td>{idx+1}</td>
+                <td>{idx + 1}</td>
                 <td>{createOrderCell(amazonResultTransferObject.orderNumber, amazonResultTransferObject.isDigital)}</td>
                 <td>{amazonResultTransferObject.date}</td>
                 <td>{priceShaping(amazonResultTransferObject.price)}</td>
@@ -32,16 +33,6 @@ function createPaymentDetails(amazonResultTransferObject: AmazonResultTransferOb
     let invoiceIdsStr = "";
     let jsxElem = (<></>)
     if (amazonResultTransferObject.invoiceList.length) {
-
-        let invoiceIdHTML = `<table><tbody>`;
-        for (let data of amazonResultTransferObject.invoiceList) {
-            let body = `<tr><td>`
-            let dlStr = `{data.isQualifiedInvoice && data.isCreateInvoicePDF ? "<a>支払い明細DL</a>" : ""}`
-            body += dlStr;
-            invoiceIdsStr += dlStr;
-            body += `</td></tr>`
-            invoiceIdHTML += body;
-        }
         jsxElem = (
             <>
                 <table>
@@ -49,7 +40,7 @@ function createPaymentDetails(amazonResultTransferObject: AmazonResultTransferOb
                     {createRows(amazonResultTransferObject)}
                     </tbody>
                 </table>
-                {createSellerContactURL(amazonResultTransferObject.sellerContactURLs)}
+                {createSellerContactURL(amazonResultTransferObject,amazonResultTransferObject.sellerContactURLs)}
             </>
         );
     }
@@ -60,23 +51,27 @@ function createPaymentDetails(amazonResultTransferObject: AmazonResultTransferOb
 function createRows(amazonResultTransferObject: AmazonResultTransferObject) {
     return (
         <>
-            {amazonResultTransferObject.invoiceList.map(data => {
-                <tr>
-                    <td>
-                        {data.isQualifiedInvoice && data.isCreateInvoicePDF ? "<a>支払い明細DL</a>" : "<span>-</span>"}
-                        <br/>
-                    </td>
-                </tr>
+            {amazonResultTransferObject.invoiceList.map((data, num) => {
+                if ((data.isQualifiedInvoice === false) && data.isCreateInvoicePDF) {
+                    return (
+                        <tr key={num}>
+                            <td>
+                                <QualifiedNonInvoiceLink orderNo={amazonResultTransferObject.orderNumber}
+                                                         idx={num}/>
+                            </td>
+                        </tr>)
+                }
             })}
         </>)
 
 }
 
-function createSellerContactURL(urlList: string[]) {
+function createSellerContactURL(amazonResultTransferObject:AmazonResultTransferObject,urlList: string[]) {
     if (!urlList.length) return (<></>);
+    // 適格請求書だけならリンクもつらない
+    if(amazonResultTransferObject.isQualifiedInvoice)return (<></>);
     return (
         <>
-
             {urlList.map(url => {
                 if (url) {
                     let matched = url.match(/sellerID=[A-Z|0-9]*/);
@@ -87,10 +82,10 @@ function createSellerContactURL(urlList: string[]) {
                         sellerId = sellerId.replace("sellerID=", "")
 
                         let storeURL = `https://www.amazon.co.jp/sp?seller=${sellerId}`;
-                        <p>
-                            <a href={url} target="_blank">ストアにチャットで連絡</a><br/>
-                            <a href={storeURL} target="_blank">ストアを確認</a>
-                        </p>
+                        return (<p>
+                            <a href={url} target="_blank">ストアにAmazonチャットで連絡</a><br/>
+                            <a href={storeURL} target="_blank">Amazonでのストア情報を確認</a>
+                        </p>)
                     }
                 }
             })}
@@ -136,7 +131,7 @@ function productDataLinks(productDataList: AmazonOrderProductData[]) {
     return (
         <>
             {productDataList.map((value, key) =>
-                    <HistoryProductDataLink productData={value} key={key}/>
+                <HistoryProductDataLink productData={value} key={key}/>
             )}
         </>
     )

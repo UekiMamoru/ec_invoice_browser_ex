@@ -3,14 +3,14 @@ import {PDFDownloader} from "../../../../../model/PDFDownloader";
 
 type OrderType = { orderNo: string, idx: number }
 const AMAZON_EC_NAME = "amazon"
-export const QualifiedInvoiceLink = (prop: OrderType) => {
+export const QualifiedNonInvoiceLink = (prop: OrderType) => {
 
     let {orderNo, idx} = prop;
     return (
         <>
             <a onClick={
                 () => download(orderNo, idx)
-            }>適格請求書DL</a>
+            }>支払い明細</a>
         </>
     )
 }

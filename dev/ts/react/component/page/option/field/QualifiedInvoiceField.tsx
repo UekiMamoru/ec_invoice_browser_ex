@@ -9,8 +9,15 @@ export const QualifiedInvoiceField = (prop: AmazonResultTransferObjectWrap) => {
         <>
             <table>
                 <tbody>
-                { amazonResultTransferObject.invoiceList.map((value, index) =>
-                    <tr key={index}><td><QualifiedInvoiceLink orderNo={amazonResultTransferObject.orderNumber}  idx={index}/></td></tr>
+                {amazonResultTransferObject.invoiceList.map((value, index) => {
+                    // 適格請求書なら
+                        if (value.isQualifiedInvoice) {
+                            return (<tr key={index}>
+                                <td><QualifiedInvoiceLink orderNo={amazonResultTransferObject.orderNumber} idx={index}/>
+                                </td>
+                            </tr>);
+                        }
+                    }
                 )}
                 </tbody>
             </table>
