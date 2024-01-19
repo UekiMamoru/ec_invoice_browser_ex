@@ -7,6 +7,7 @@ module.exports = {
     entry: {
 
         'pdf': "./dev/js/pdf.js",
+        'pdfmerger': "./dev/js/pdfmerger.js",
         // "content": "./dev/js/content/main/content.js",
         "worker": "./dev/js/background/worker.js",
 
