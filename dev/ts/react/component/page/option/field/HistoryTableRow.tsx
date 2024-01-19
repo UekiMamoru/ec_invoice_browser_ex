@@ -82,7 +82,7 @@ function createSellerContactURL(amazonResultTransferObject:AmazonResultTransferO
                         sellerId = sellerId.replace("sellerID=", "")
 
                         let storeURL = `https://www.amazon.co.jp/sp?seller=${sellerId}`;
-                        return (<p>
+                        return (<p key={url}>
                             <a href={url} target="_blank">ストアにAmazonチャットで連絡</a><br/>
                             <a href={storeURL} target="_blank">Amazonでのストア情報を確認</a>
                         </p>)

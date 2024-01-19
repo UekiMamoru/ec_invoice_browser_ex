@@ -10,6 +10,8 @@
     "target": "ES2022",
     "allowJs": true,
     "jsx": "react-jsx",
+
+    "allowSyntheticDefaultImports": true,
     "lib": [
       "ES2022","DOM",
     ]
