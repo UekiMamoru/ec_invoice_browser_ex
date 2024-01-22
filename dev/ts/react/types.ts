@@ -41,3 +41,9 @@ export type AmazonResultTransferObject = {
     sellerContactURLs: string[],
     invoiceList:AmazonInvoiceDataParamObj[],
 }
+
+
+export type CombinePDFData={
+    orderNumber:string,
+    index:string
+}

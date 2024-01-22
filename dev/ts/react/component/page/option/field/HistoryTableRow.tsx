@@ -2,16 +2,27 @@ import {AmazonOrderProductData, AmazonResultTransferObject} from "../../../../ty
 import {HistoryProductDataLink} from "./HistoryProductDataLink";
 import {QualifiedInvoiceField} from "./QualifiedInvoiceField";
 import {QualifiedNonInvoiceLink} from "./QualifiedNonInvoiceLink";
+import {CombinePDFModel} from "../../../../../model/CombinePDFModel";
 
 type AmazonResultTransfer = {
-    amazonResultTransferObject: AmazonResultTransferObject, idx: number
+    amazonResultTransferObject: AmazonResultTransferObject, idx: number, combinePDFModel: CombinePDFModel
 }
 
 export const HistoryTableRow = (prop: AmazonResultTransfer) => {
-    let {amazonResultTransferObject, idx} = prop;
+    let {amazonResultTransferObject, idx, combinePDFModel} = prop;
     return (
         <>
             <tr>
+                <td>{amazonResultTransferObject.isQualifiedInvoice?<input type="checkbox"
+                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                               let a = {index: idx + "", orderNumber: amazonResultTransferObject.orderNumber}
+                               if (event.currentTarget.checked) {
+                                   // 追加できなかったらチェックを外す
+                                   event.currentTarget.checked = combinePDFModel.add(a);
+                               } else {
+                                   combinePDFModel.remove(a);
+                               }
+                           }}/>:<span>-</span>}</td>
                 <td>{idx + 1}</td>
                 <td>{createOrderCell(amazonResultTransferObject.orderNumber, amazonResultTransferObject.isDigital)}</td>
                 <td>{amazonResultTransferObject.date}</td>
@@ -40,7 +51,7 @@ function createPaymentDetails(amazonResultTransferObject: AmazonResultTransferOb
                     {createRows(amazonResultTransferObject)}
                     </tbody>
                 </table>
-                {createSellerContactURL(amazonResultTransferObject,amazonResultTransferObject.sellerContactURLs)}
+                {createSellerContactURL(amazonResultTransferObject, amazonResultTransferObject.sellerContactURLs)}
             </>
         );
     }
@@ -66,10 +77,10 @@ function createRows(amazonResultTransferObject: AmazonResultTransferObject) {
 
 }
 
-function createSellerContactURL(amazonResultTransferObject:AmazonResultTransferObject,urlList: string[]) {
+function createSellerContactURL(amazonResultTransferObject: AmazonResultTransferObject, urlList: string[]) {
     if (!urlList.length) return (<></>);
     // 適格請求書だけならリンクもつらない
-    if(amazonResultTransferObject.isQualifiedInvoice)return (<></>);
+    if (amazonResultTransferObject.isQualifiedInvoice) return (<></>);
     return (
         <>
             {urlList.map(url => {

@@ -1,0 +1,11 @@
+@import "globals";
+button.blue {
+  color: var(--blue-6);
+  background-color: var(--blue-0);
+  border: 1px solid var(--blue-1);
+  text-shadow: 0 1px 0 var(--blue-2);
+  font-size:  var(--font-size-3);
+  &:hover {
+    background-color: var(--blue-1);
+  }
+}
