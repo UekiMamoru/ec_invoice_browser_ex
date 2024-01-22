@@ -5,24 +5,35 @@ import {QualifiedNonInvoiceLink} from "./QualifiedNonInvoiceLink";
 import {CombinePDFModel} from "../../../../../model/CombinePDFModel";
 
 type AmazonResultTransfer = {
-    amazonResultTransferObject: AmazonResultTransferObject, idx: number, combinePDFModel: CombinePDFModel
+    amazonResultTransferObject: AmazonResultTransferObject,
+    idx: number,
+    combinePDFModel: CombinePDFModel,
+    createInput: boolean
 }
 
 export const HistoryTableRow = (prop: AmazonResultTransfer) => {
-    let {amazonResultTransferObject, idx, combinePDFModel} = prop;
+    let {amazonResultTransferObject, idx, combinePDFModel, createInput} = prop;
     return (
         <>
             <tr>
-                <td>{amazonResultTransferObject.isQualifiedInvoice?<input type="checkbox"
-                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                               let a = {index: idx + "", orderNumber: amazonResultTransferObject.orderNumber}
-                               if (event.currentTarget.checked) {
-                                   // 追加できなかったらチェックを外す
-                                   event.currentTarget.checked = combinePDFModel.add(a);
-                               } else {
-                                   combinePDFModel.remove(a);
-                               }
-                           }}/>:<span>-</span>}</td>
+                {createInput ?
+                    <td>
+                        {amazonResultTransferObject.isQualifiedInvoice ? <input type="checkbox"
+                                                                                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                                                                    let a = {
+                                                                                        index: idx + "",
+                                                                                        orderNumber: amazonResultTransferObject.orderNumber
+                                                                                    }
+                                                                                    if (event.currentTarget.checked) {
+                                                                                        // 追加できなかったらチェックを外す
+                                                                                        event.currentTarget.checked = combinePDFModel.add(a);
+                                                                                    } else {
+                                                                                        combinePDFModel.remove(a);
+                                                                                    }
+                                                                                }}/> : <span>-</span>}
+                    </td>
+                    : ""
+                }
                 <td>{idx + 1}</td>
                 <td>{createOrderCell(amazonResultTransferObject.orderNumber, amazonResultTransferObject.isDigital)}</td>
                 <td>{amazonResultTransferObject.date}</td>

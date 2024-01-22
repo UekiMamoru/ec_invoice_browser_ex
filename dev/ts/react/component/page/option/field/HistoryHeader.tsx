@@ -1,9 +1,13 @@
-export const HistoryHeader = () => {
+type Req = {
+    createInput:boolean
+}
+export const HistoryHeader = (prop:Req) => {
+    let {createInput} = prop;
     return(
         <>
             <thead>
             <tr>
-                <th>選択</th>
+                {createInput?<th>選択</th>:""}
                 <th>番号</th>
                 <th>注文番号</th>
                 <th>注文日</th>

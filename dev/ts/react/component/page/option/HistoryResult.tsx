@@ -11,7 +11,7 @@ export const HistoryResult = (prop: HistoryResultData) => {
     return (
         <>
             <h1><span id="siteName">{siteName}</span>の結果</h1>
-            <HistoryField data={data}/>
+            <HistoryField createInput={false} data={data}/>
         </>
 )
 }

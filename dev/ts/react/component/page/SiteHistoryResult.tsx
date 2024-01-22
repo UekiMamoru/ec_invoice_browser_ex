@@ -24,7 +24,7 @@ const Exporter = (siteHistoryResultProp: SiteHistoryResultProp) => {
     let len = entit.length;
     return (
         <>
-            <HistoryField data={dataObject}/>
+            <HistoryField createInput={true} data={dataObject}/>
         </>
     )
 }
