@@ -29,9 +29,9 @@ export class CombinePDFModel {
     }
 
     remove(combinePDFData: CombinePDFData) {
-        this._selectedDataList = this._selectedDataList.filter(e => {
+        this._selectedDataList = this._selectedDataList.filter(e =>
             combinePDFData.orderNumber !== e.orderNumber
-        });
+        );
     }
 
     async export() {
