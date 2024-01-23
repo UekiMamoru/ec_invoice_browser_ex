@@ -1,5 +1,4 @@
-
-export type AmazonOrderProductData ={ asin: string, href: string, title: string, imgSrc: string }
+export type AmazonOrderProductData = { asin: string, href: string, title: string, imgSrc: string }
 export type AmazonOrderDataObj = {
     no: string,
     productList: AmazonOrderProductData[],
@@ -39,11 +38,38 @@ export type AmazonResultTransferObject = {
     isCreateInvoicePDF: boolean,
     qualifiedInvoiceReason: string,
     sellerContactURLs: string[],
-    invoiceList:AmazonInvoiceDataParamObj[],
+    invoiceList: AmazonInvoiceDataParamObj[],
 }
 
 
-export type CombinePDFData={
+export type CombinePDFData = {
+    orderNumber: string,
+    index: string
+}
+
+export type FileNameTypeObj = { name: string, format: string, viewName: string }
+export type FileNameFormatObj = {
+    format: string,
+    formats: string[],
+    default: FileNameTypeObj,
+    option: {
+        orderDate: FileNameTypeObj,
+        orderNum: FileNameTypeObj,
+        siteName: FileNameTypeObj
+    },
+    custom?:FileNameTypeObj[],
+    dateFormat:number
+}
+
+export const DATE_FORMAT_TYPE = {
+    HYPHEN:0,
+    SLASH:1,
+    JP_YYYYMMDD:2
+} as const;
+
+
+export type FileNameExportData = {
+    siteName:string,
     orderNumber:string,
-    index:string
+    date:string
 }

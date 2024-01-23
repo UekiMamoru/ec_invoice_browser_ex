@@ -28,10 +28,13 @@ function QueryHandler() {
 
     // URLに基づいて表示するコンポーネントを決定
     if (location.pathname.startsWith('/history/')) {
-        return <EcInvoiceHistory/>;
+        return (<><EcInvoiceHistory/></>);
     }
 
     // デフォルトのホーム画面など、他のコンポーネントをここに表示
-    return <div>ホームだよー</div>;
+    return (<>
+        <div>ホーム</div>
+
+    </>);
 }
 

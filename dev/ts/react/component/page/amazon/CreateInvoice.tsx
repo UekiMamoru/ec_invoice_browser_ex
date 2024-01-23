@@ -10,11 +10,13 @@ import {PDFBufferData} from "../../../../model/PDFBufferData";
 import {useState} from "react";
 import {LoaderField} from "../../../../model/LoaderField";
 import {ViewLogger} from "../../../../view/ViewLogger";
+import {DownloadFileNameCreator} from "../../../../model/util/DownloadFileNameCreator";
 
 const AMAZON_EC_NAME = "amazon";
 const loaderField = new LoaderField();
 const viewLogger = new ViewLogger();
 viewLogger.field = loaderField.msgBox;
+const downloadFileNameCreator = new DownloadFileNameCreator("amazon");
 
 export const CreateInvoice = (prop: {
     callback: Function,
@@ -67,6 +69,7 @@ async function createList(includeDigital: boolean = false, callback: Function) {
     if (!isPdfGetAndDownload) {
         pdfGetAndDownloadMsg = `PDF取得のみ行います`
     }
+
     exportUserLogMsg(pdfGetAndDownloadMsg)
     // デジタル以外を取得
     let list = includeDigital ? createOrders() : filterNonDigitalOrders();
@@ -75,7 +78,7 @@ async function createList(includeDigital: boolean = false, callback: Function) {
     for (const amazonOrderDataObj of list) {
         if (amazonOrderDataObj) {
             exportUserLogMsg(`注文番号${amazonOrderDataObj.no}の処理を開始します`)
-            let fileName = `amazon_${amazonOrderDataObj.date}_${amazonOrderDataObj.no}`
+            let fileName = await  downloadFileNameCreator.createFileName(amazonOrderDataObj)//`amazon_${amazonOrderDataObj.date}_${amazonOrderDataObj.no}`
             let isInvoice = false;
             // todo 当該注文番号に紐づくシリアライズしたデータがあるかチェック
             let getVal = {
@@ -99,8 +102,11 @@ async function createList(includeDigital: boolean = false, callback: Function) {
                 let data = result.data
                 amazonInvoiceObj = result.data.amazonInvoiceObj//.invoiceList;
                 //
-                data.pdfStrs.forEach((pdfStr: string, idx: number) => {
-                    let fileName = `tmp_${result.data.fileName}${idx > 1 ? idx - 1 : ""}`;
+                let pdfStrs = data.pdfStrs;
+                let idx = 0;
+                for(let pdfStr of pdfStrs){
+                    let fileName = await  downloadFileNameCreator.createFileName(amazonOrderDataObj,idx > 1 ? idx - 1 : "");
+                    idx++;
                     pdfArrayBuffer = (arrayBuffSerializableStringToArrayBuff(pdfStr));
                     if (pdfArrayBuffer) {
                         if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
@@ -109,7 +115,7 @@ async function createList(includeDigital: boolean = false, callback: Function) {
                     }
                     pdfArrayBuffer = "";
                     // param = invoiceListParam;
-                });
+                }
             } else {
                 let invoiceURL = amazonOrderDataObj.invoiceData.url;
                 let url = `https://www.amazon.co.jp${invoiceURL}`;
@@ -295,7 +301,6 @@ async function createList(includeDigital: boolean = false, callback: Function) {
             resultOrderOutputs.push(createOrderOutputObject(amazonOrderDataObj, amazonInvoiceObj))
 
         }
-
         await Thread.sleep(300);
         exportUserLogMsg(`${amazonOrderDataObj.no}の処理が終了しました`)
     }

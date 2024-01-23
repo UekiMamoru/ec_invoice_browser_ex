@@ -3,14 +3,63 @@ import {createRoot} from 'react-dom/client';
 import {EcHistoryLink} from "../component/page/popup/EcHistoryLink";
 import OpenProps from "open-props";
 import Colors from "open-props/src/props.colors.css"
+import {FileFormatStorage} from "../../db/FileFormatStorage";
+import {Suspense} from "react";
+import {FileNameSuspenseModel, FileNameSuspenseResult} from "../../model/util/FileNameSuspenseModel";
+import {HistoryResult} from "../../model/OrderHistoryDataModel";
 
 // import {useState} from "react";
 // import {FirebasePopupChromeAccountSingInV3} from "../../lib/FirebasePopupChromeAccountSingInV3";
 
 const container = document.getElementById('app');
+const fileNameSuspenseModel = new FileNameSuspenseModel();
+const FileNameFormatField = () => {
+    let data = ecResultCheck(getFileFormat())
+    let format = data?.format;
+    let defaultData = data?.default;
+    if (!format) {
+        format = defaultData?.viewName;
+    }
+    let optionOpen = () => {
+        chrome.tabs.create({url: chrome.runtime.getURL("option/index.html")})
+    }
+
+    return (
+        <div style={{position: "fixed", left: "0", bottom: "0", width: "100%", backgroundColor: "#ffa559"}}>
+            <div style={{
+                padding: ".5em",
+                borderBottom: "solid 1px #ccc",
+                borderTop: "solid 1px #ccc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+            }}>
+                <p style={{fontSize: "1em"}}>現在のファイルネームフォーマット</p>
+                <button onClick={optionOpen} style={{fontSize: "1em"}}>編集</button>
+            </div>
+            <div style={{
+                fontWeight: "bold",
+                padding: ".5em",
+                border: "solid 1px #ccc",
+                backgroundColor: "white"
+            }}>{format}.pdf
+            </div>
+        </div>);
+
+}
+const getFileFormat = () => {
+    return fileNameSuspenseModel.getFormat("format");
+}
+
+function ecResultCheck(ecResult: FileNameSuspenseResult) {
+    if (ecResult.status) {
+        return ecResult.data;
+    }
+    throw ecResult.promise;
+}
 
 const App = () => {
-    let siteName = "amazon"
+    let siteName = "amazon";
     // let [credential, setCredential] = useState("");
     // const signIn = (event: React.MouseEvent<HTMLButtonElement>) => {
     //     let target = event.currentTarget;
@@ -54,6 +103,11 @@ const App = () => {
                 <button className={"btn"}><a href="https://www.amazon.co.jp/gp/your-account/order-history"
                                              target="_blank">Amazonの注文履歴を開く</a></button>
                 <EcHistoryLink siteName={siteName}/>
+                <div>
+                    <Suspense fallback={<p>ロード中</p>}>
+                        <FileNameFormatField/>
+                    </Suspense>
+                </div>
             </div>
         </>
     )

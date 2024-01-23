@@ -1,7 +1,11 @@
 import {Thread} from "../content/util/Thread";
+import {FileNameFormatObj} from "../../ts/react/types";
+import {FileFormatStorage} from "../../ts/db/FileFormatStorage";
 
 const EC_KEY_PREFIX = "ec_";
-let lastData  ;
+let lastData;
+let fileFormatStorage = new FileFormatStorage()
+
 // バージョンが古い場合でフラッシュ
 chrome.runtime.onInstalled.addListener((details) => {
     if (details.reason === "update") {
@@ -125,9 +129,18 @@ chrome.runtime.onMessage.addListener(
             })
         } else if (message.hasOwnProperty("type") && message.type === "get-last-data") {
             callback(lastData);
+        } else if (message.hasOwnProperty("type") && message.type === "get-file-format") {
+            // fileFormat
+            fileFormatStorage.get().then(format=>{
+                callback(format)
+            })
+        } else if (message.hasOwnProperty("type") && message.type === "set-file-format") {
+            // fileFormat
+            fileFormatStorage.update(message.data).then(()=>{
+                callback()
+            })
         }
 
         return true;
     }
 );
-

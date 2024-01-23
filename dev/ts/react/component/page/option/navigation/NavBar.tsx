@@ -11,6 +11,9 @@ const NavBar = () => {
                     <OptionNavLink name={"TOP"} to={"/index.html"}/>
                 </li>
                 <li>
+                    <OptionNavLink name={"設定"} to={"/user/setting"}/>
+                </li>
+                <li>
                     <OptionNavLink name={"Amazon履歴"} to={"/history/amazon"}/>
                 </li>
             </ul>
