@@ -21,7 +21,10 @@ const FileNameFormatField = () => {
         format = defaultData?.viewName;
     }
     let optionOpen = () => {
-        chrome.tabs.create({url: chrome.runtime.getURL("option/index.html")})
+
+        let url = chrome.runtime.getURL(`option/index.html?target=user&ec=setting`);
+        chrome.tabs.create({url})
+
     }
 
     return (

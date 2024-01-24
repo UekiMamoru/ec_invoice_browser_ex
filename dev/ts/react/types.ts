@@ -58,13 +58,21 @@ export type FileNameFormatObj = {
         siteName: FileNameTypeObj
     },
     custom?:FileNameTypeObj[],
-    dateFormat:number
+    dateSeparator:number,
+    dateZeroPadding:number
 }
 
-export const DATE_FORMAT_TYPE = {
+export const DATE_SEPARATOR_FORMAT_TYPE = {
     HYPHEN:0,
     SLASH:1,
+    UNDER_SCORE:3,
     JP_YYYYMMDD:2
+} as const;
+
+
+export const DATE_ZERO_PADDING_FORMAT_TYPE = {
+    PADDING:0,
+    NO_PADDING:1
 } as const;
 
 
@@ -72,4 +80,12 @@ export type FileNameExportData = {
     siteName:string,
     orderNumber:string,
     date:string
+}
+
+
+export type ChildToParentSenderData = {
+    sender:Function,
+    boolVal?:boolean
+    strVal?:string
+    numberVal?:number
 }

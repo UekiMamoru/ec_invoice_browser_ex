@@ -1,4 +1,4 @@
-import {DATE_FORMAT_TYPE, FileNameFormatObj} from "../react/types";
+import {DATE_SEPARATOR_FORMAT_TYPE, DATE_ZERO_PADDING_FORMAT_TYPE, FileNameFormatObj} from "../react/types";
 
 export class FileFormatStorage {
     private _fileFormat: FileNameFormatObj;
@@ -26,6 +26,8 @@ export class FileFormatStorage {
     async update(data: FileNameFormatObj) {
         let key = this._key;
         this._fileFormat.format = data.format;
+        this._fileFormat.dateZeroPadding = data.dateZeroPadding;
+        this._fileFormat.dateSeparator = data.dateSeparator;
         await chrome.storage.local.set({[key]: this._fileFormat})
     }
 
@@ -40,7 +42,8 @@ export class FileFormatStorage {
                 siteName: {viewName: "{{サイト名}}", name: "site", format: `{{__SITE_NAME__}}`},
             },
             custom: [],
-            dateFormat:DATE_FORMAT_TYPE.JP_YYYYMMDD
+            dateSeparator:DATE_SEPARATOR_FORMAT_TYPE.JP_YYYYMMDD,
+            dateZeroPadding:DATE_ZERO_PADDING_FORMAT_TYPE.NO_PADDING
         }
         f.default.format = `${f.option.siteName.format}_${f.option.orderDate.format}_${f.option.orderNum.format}`;
         return f;

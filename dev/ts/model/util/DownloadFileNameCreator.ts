@@ -1,7 +1,7 @@
 import {FileNameFormat} from "./FileNameFormat";
 import {
     AmazonOrderDataObj,
-    DATE_FORMAT_TYPE,
+    DATE_SEPARATOR_FORMAT_TYPE, DATE_ZERO_PADDING_FORMAT_TYPE,
     FileNameExportData,
     FileNameFormatObj,
     FileNameTypeObj
@@ -22,10 +22,11 @@ export class DownloadFileNameCreator {
 
     convert(format: string, fileNameFormatObj: FileNameFormatObj, amazonOrderDataObj: FileNameExportData) {
         let formatStr = this.viewNameToFormatPattern(format, fileNameFormatObj);
+        let date =amazonOrderDataObj.date
+        date = this.convertZeroPadding(date,fileNameFormatObj.dateZeroPadding);
+        date = this.convertDateFormat(date, fileNameFormatObj.dateSeparator)
         formatStr = this.convertFileNameTypeObjToStr(fileNameFormatObj.option.siteName, formatStr, this._siteName)
-        formatStr = this.convertFileNameTypeObjToStr(fileNameFormatObj.option.orderDate, formatStr, this.convertDateFormat(
-            amazonOrderDataObj.date, fileNameFormatObj.dateFormat)
-        )
+        formatStr = this.convertFileNameTypeObjToStr(fileNameFormatObj.option.orderDate, formatStr, date        )
         formatStr = this.convertFileNameTypeObjToStr(fileNameFormatObj.option.orderNum, formatStr, amazonOrderDataObj.orderNumber)
         return formatStr;
     }
@@ -49,14 +50,42 @@ export class DownloadFileNameCreator {
         return formatStr;
     }
 
+    convertZeroPadding(date:string,type:number){
+        let str = date;
+        const YEAR = "年",MONTH= "月",DAY="日";
+        switch (type){
+            case DATE_ZERO_PADDING_FORMAT_TYPE.PADDING:
+                let splited = str.split(new RegExp(`${YEAR}|${MONTH}|${DAY}`));
+                let year  = splited[0];
+                let month =this.zeroPadding(splited[1]);
+                let day = this.zeroPadding(splited[2]);
+                str = `${year}${YEAR}${month}${MONTH}${day}${DAY}`;
+
+        }
+        return str;
+    }
+
+    zeroPadding(str:string){
+        let number = Number.parseInt(str);
+        if(isNaN(number)){
+            return str;
+        }
+        if(number<=9){
+            str=`0${str}`;
+        }
+        return str;
+    }
+
     convertDateFormat(date: string, type: number) {
         let str = date;
         // yyyy年mm月dd日形式になっているので、それをリプレース
         switch (type) {
-            case DATE_FORMAT_TYPE.HYPHEN:
+            case DATE_SEPARATOR_FORMAT_TYPE.HYPHEN:
                 return date.replaceAll(/年|月/ig, "-").replaceAll("日","");
-            case DATE_FORMAT_TYPE.SLASH:
-                return date.replaceAll(/年|月/ig, "/").replaceAll("日","");
+            // case DATE_SEPARATOR_FORMAT_TYPE.SLASH:
+                // return date.replaceAll(/年|月/ig, "/").replaceAll("日","");
+            case DATE_SEPARATOR_FORMAT_TYPE.UNDER_SCORE:
+                return date.replaceAll(/年|月/ig, "_").replaceAll("日","");
         }
 
         return str;

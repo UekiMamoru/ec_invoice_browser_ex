@@ -13,6 +13,7 @@ export const  EcInvoiceSetting = () => {
             <h1>{title}</h1>
             <h2>{"PDFファイル名設定"}</h2>
             <PDFFileNameSetting/>
+
         </>
     )
 };

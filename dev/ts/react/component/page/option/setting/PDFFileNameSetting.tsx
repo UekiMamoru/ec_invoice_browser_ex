@@ -17,21 +17,26 @@ export const PDFFileNameSetting = () => {
 
     )
 }
-function PDFFileNameFieldWrap(){
 
-    let data = fileNameSuspenseModel.resultCheck(fileNameSuspenseModel.getFileFormat("format"));//ecResultCheck(getFileFormat())
-    if(!data){
+function PDFFileNameFieldWrap() {
+    let key = "format"
+    let data = fileNameSuspenseModel.resultCheck(fileNameSuspenseModel.getFileFormat(key));
+    if (!data) {
         data = getDefData()
+    }
+
+    let updateFileNameObj = (fileNameFormatObj: FileNameFormatObj) => {
+        fileNameSuspenseModel.updateFormat(key, fileNameFormatObj)
     }
 
     return (
         <>
-            <PDFFileNameField fileNameFormatObj={data}/>
+            <PDFFileNameField fileNameFormatObj={data} updateFileNameObj={updateFileNameObj}/>
         </>
 
     );
 }
 
-function getDefData(){
+function getDefData() {
     return fileNameSuspenseModel.getDefData();
 }

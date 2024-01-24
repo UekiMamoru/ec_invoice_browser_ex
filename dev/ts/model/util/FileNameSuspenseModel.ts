@@ -1,5 +1,5 @@
 import {FileFormatStorage} from "../../db/FileFormatStorage";
-import { FileNameFormatObj} from "../../react/types";
+import {FileNameFormatObj} from "../../react/types";
 
 export class FileNameSuspenseModel {
 
@@ -12,9 +12,14 @@ export class FileNameSuspenseModel {
         this._lastPromiseMap = new Map<string, FileNameSuspenseResult>()
     }
 
-     getFileFormat(str : string) {
+    updateFormat(str:string,fileNameFormatObj: FileNameFormatObj) {
+        this._fileFormatStorage.update(fileNameFormatObj);
+    }
+
+    getFileFormat(str: string) {
         return this.getFormat(str);
     }
+
 
     resultCheck(ecResult: FileNameSuspenseResult) {
         if (ecResult.status) {
@@ -22,6 +27,7 @@ export class FileNameSuspenseModel {
         }
         throw ecResult.promise;
     }
+
     getFormat(key: string): FileNameSuspenseResult {
         let ecPageData = this._lastPromiseMap.get(key);
         if (ecPageData) {
@@ -50,7 +56,7 @@ export class FileNameSuspenseModel {
         return fileNameFormatObj;
     }
 
-    getDefData(){
+    getDefData() {
         return this._fileFormatStorage.getDefaultVal();
     }
 }
