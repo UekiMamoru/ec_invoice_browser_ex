@@ -12,7 +12,7 @@ export const PDFFileNameFormatField = (prop: PDFFileNameFormatFieldData) => {
     return (
         <>
 
-            <div>
+            <div style={{paddingBottom: "1.5em"}}>
                 <p>表示サンプル用データ</p>
                 <table>
                     <thead>
@@ -39,10 +39,17 @@ export const PDFFileNameFormatField = (prop: PDFFileNameFormatFieldData) => {
                     </tbody>
                 </table>
             </div>
-            <p>・フォーマットを入力してください</p>
+
             <div style={{padding: ".5em 0"}}>
+                <p style={{paddingBottom: ".5em"}}>・フォーマットを入力してください</p>
                 <input type="text"
-                       style={{width: "100%", padding: ".3em", fontSize: "1.3em", backgroundColor: "white"}}
+                       style={{
+                           width: "100%",
+                           padding: ".3em",
+                           fontSize: "1.3em",
+                           backgroundColor: "white",
+                           border: "solid 1px #ccc"
+                       }}
                        value={formatText}
                        onChange={
                            (ev) => {
@@ -61,7 +68,6 @@ export const PDFFileNameFormatField = (prop: PDFFileNameFormatFieldData) => {
                 />
 
             </div>
-
         </>
     )
 }

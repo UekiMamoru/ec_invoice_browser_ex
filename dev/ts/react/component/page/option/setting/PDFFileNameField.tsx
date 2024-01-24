@@ -43,7 +43,7 @@ export const PDFFileNameField = (prop: FileNameFormatObjTransfer) => {
     return (
         <>
             <div style={{width: "100%"}}>
-
+                <div style={{borderTop:"solid 1px #ccc",borderBottom:"solid 1px #ccc",padding:"1em 0"}}>
                 <PDFFileNameFormatField
                     fileNameFormatObj={ fileNameFormatObj}
                     fileNameExportData={fileNameExportData}
@@ -51,10 +51,15 @@ export const PDFFileNameField = (prop: FileNameFormatObjTransfer) => {
                     updateFormatText={
                         (str: string) => {
                             setFormatText(str);
+                            // 編集されたformatを更新
+                            fileNameFormatObj.format = str;
+                            updateFileNameObj(fileNameFormatObj)
                         }
                     }/>
                 <p style={{padding: ".5em", width: "100%", maxInlineSize: "initial"}}>ファイル名は「<span
                     style={{fontWeight: "bold"}}>{formattedFileName}.pdf</span>」で保存されます。</p>
+
+                </div>
                 <PDFFileNameDateSettingField
                     dateSeparatorUpdate={(numberVal: number) => {
                         setDateSeparator(numberVal);
