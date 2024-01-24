@@ -62,7 +62,9 @@ async function getPDFTypeNum(pdfStr = "") {
         invoiceId: target ? target.str.trim() : "",
         isInvoice: false
     }
-    pdfData.isInvoice = Boolean(pdfData.type.match("適格"));
+    // インボイスかどうかは登録番号の有無で判定したほうがいいかも
+    // 表示にも利用する
+    pdfData.isInvoice = Boolean(pdfData.type.match("適格") && (pdfData.invoiceId));
     canvas.height = 0;
     canvas.width = 0;
     canvas.remove();

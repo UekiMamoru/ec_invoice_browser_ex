@@ -1,4 +1,4 @@
-import {AmazonResultTransferObject} from "../../../../types";
+import {AmazonInvoiceDataParamObj, AmazonResultTransferObject} from "../../../../types";
 import {QualifiedInvoiceLink} from "./QualifiedInvoiceLink";
 import {JSX} from "react";
 
@@ -13,7 +13,12 @@ export const QualifiedInvoiceField = (prop: AmazonResultTransferObjectWrap) => {
                     // 適格請求書なら
                         if (value.isQualifiedInvoice) {
                             return (<tr key={index}>
-                                <td><QualifiedInvoiceLink orderNo={amazonResultTransferObject.orderNumber} idx={index}/>
+                                <td>
+                                    <QualifiedInvoiceLink
+                                    orderNo={amazonResultTransferObject.orderNumber}
+                                    idx={index}
+                                    amazonInvoiceDataParamObj={value}
+                                />
                                 </td>
                             </tr>);
                         }

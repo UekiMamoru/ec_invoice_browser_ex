@@ -34,10 +34,10 @@ export const HistoryTableRow = (prop: AmazonResultTransfer) => {
                     </td>
                     : ""
                 }
-                <td>{idx + 1}</td>
+                <td style={{textAlign:"right"}}>{idx + 1}</td>
                 <td>{createOrderCell(amazonResultTransferObject.orderNumber, amazonResultTransferObject.isDigital)}</td>
                 <td>{amazonResultTransferObject.date}</td>
-                <td>{priceShaping(amazonResultTransferObject.price)}</td>
+                <td style={{textAlign:"right"}}>{priceShaping(amazonResultTransferObject.price)}</td>
                 <td>{productDataLinks(amazonResultTransferObject.productDataList)}</td>
                 <td>{amazonResultTransferObject.isDigital ? "D" : "-"}</td>
                 <td>{amazonResultTransferObject.isMultipleOrder ? "multiple" : "-"}</td>

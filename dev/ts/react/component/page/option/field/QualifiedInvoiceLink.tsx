@@ -3,16 +3,18 @@ import {PDFDownloader} from "../../../../../model/PDFDownloader";
 import PDFMerger from "pdf-merger-js/browser";
 import {SetStateAction, useState} from "react";
 import {OrderPDFCacheDataStore} from "../../../../../model/OrderPDFCacheDataStore";
+import {AmazonInvoiceDataParamObj} from "../../../../types";
 
-type OrderType = { orderNo: string, idx: number }
+type OrderType = { orderNo: string, idx: number, amazonInvoiceDataParamObj: AmazonInvoiceDataParamObj }
 export const QualifiedInvoiceLink = (prop: OrderType) => {
 
-    let {orderNo, idx} = prop;
-    let [iframeSrc , setIframeSrc] = useState("");
-    let [divLeft,setDivLeft] = useState("0px");
-    let [divTop,setDivTop] = useState("0px");
-    let [hideState , setHideState] = useState("none");
-    let timeObj = setTimeout(()=>{},1);
+    let {orderNo, idx, amazonInvoiceDataParamObj} = prop;
+    let [iframeSrc, setIframeSrc] = useState("");
+    let [divLeft, setDivLeft] = useState("0px");
+    let [divTop, setDivTop] = useState("0px");
+    let [hideState, setHideState] = useState("none");
+    let timeObj = setTimeout(() => {
+    }, 1);
     return (
         <>
             <a onClick={
@@ -28,6 +30,9 @@ export const QualifiedInvoiceLink = (prop: OrderType) => {
                    // setHideState("block");
                }}
             >適格請求書DL</a>
+            <p style={{fontSize: ".9em"}}>{amazonInvoiceDataParamObj.invoiceId ?
+                <a target="_blank" href={createURL(amazonInvoiceDataParamObj.invoiceId)}>{amazonInvoiceDataParamObj.invoiceId}</a> : "登録番号がありません！"}
+            </p>
             {/*<div*/}
             {/*    onMouseLeave={()=>{*/}
             {/*    setHideState("none");*/}
@@ -51,6 +56,11 @@ export const QualifiedInvoiceLink = (prop: OrderType) => {
     )
 }
 
+function createURL(str:string){
+    let mat = str.replaceAll(/[^0-9]/ig,"")
+    return `https://www.invoice-kohyo.nta.go.jp/regno-search/detail?selRegNo=${mat}`
+}
+
 async function download(orderNumber: string, dataIdx: number) {
     let [data, fileName] = await getTmpVal(orderNumber);
     let pdfArrayBuffer;
@@ -66,7 +76,7 @@ async function download(orderNumber: string, dataIdx: number) {
     });
 }
 
-async function summaryOverlay(ev: React.MouseEvent<HTMLAnchorElement>, orderNumber: string, dataIdx: number,setSrc : Function) {
+async function summaryOverlay(ev: React.MouseEvent<HTMLAnchorElement>, orderNumber: string, dataIdx: number, setSrc: Function) {
     let manager = new PDFMerger();
     let [data] = await getTmpVal(orderNumber);
     //
