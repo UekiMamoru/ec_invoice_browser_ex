@@ -57,6 +57,12 @@ export const InvoiceControlFieldBody = () => {
                     <CreateInvoice callback={disabledChange} getState={getState}/>
                 </div>
                 <div>
+                    <p style={{color: "red", fontSize: ".85em", fontWeight: "bold", padding: ".5em"}}>
+                        当拡張機能はアマゾンアカウント情報は取得していません。<br/>
+                        そのため、履歴データとアマゾンアカウントの情報紐づけを行いません。<br/>
+                        複数のアマゾンアカウントで情報を収集しますと履歴が混在します。ご了承ください。<br/>
+                        履歴データを取得済みの場合、拡張機能のアイコンをクリックで開くウィンドから履歴の削除ができます。
+                    </p>
 
                 </div>
             </div>

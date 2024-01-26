@@ -4,6 +4,11 @@ export class HistoryDataStorage {
     constructor() {
     }
 
+    async clearAllEcOrder(ecName:string){
+        let key = this.EC_KEY_PREFIX + ecName;
+        await chrome.storage.local.set({[key]:{}});
+    }
+
     async getEcOrder(ecName: string, prop: { orderNumber: string }): Promise<any|null>{
         let all= await this.getEcAll(ecName);
         if(all.hasOwnProperty(prop.orderNumber)){

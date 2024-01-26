@@ -102,15 +102,17 @@ const App = () => {
             {/*<p>サインイン</p>*/}
             {/*<button onClick={signIn}>Googleで登録して利用を開始</button>*/}
             {/*<p>{credential}</p>*/}
-            <div>
+            <div style={{paddingBottom:"5em"}}>
                 <button className={"btn"}><a href="https://www.amazon.co.jp/gp/your-account/order-history"
                                              target="_blank">Amazonの注文履歴を開く</a></button>
                 <EcHistoryLink siteName={siteName}/>
                 <div>
                     <Suspense fallback={<p>ロード中</p>}>
+
                         <FileNameFormatField/>
                     </Suspense>
                 </div>
+
             </div>
         </>
     )

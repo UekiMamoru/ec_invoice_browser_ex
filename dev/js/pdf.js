@@ -53,13 +53,11 @@ async function getPDFTypeNum(pdfStr = "") {
     let v = await page.getTextContent();
     let items = v.items;
     console.log(items[0].str.match("適格請求書"))
-    let target = items.find(d => {
-        return d.str.match("登録番号: T")
-    })
+    let target = items.map(v=>v.str).join("").match(/登録番号: T[0-9]{13}/)
     console.log(target)
     let pdfData = {
         type: items[0].str.trim(),
-        invoiceId: target ? target.str.trim() : "",
+        invoiceId: target ? target[0].trim() : "",
         isInvoice: false
     }
     // インボイスかどうかは登録番号の有無で判定したほうがいいかも

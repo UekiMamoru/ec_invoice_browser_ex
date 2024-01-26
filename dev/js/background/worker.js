@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 
         if (previousVersion < currentVersion) {
             // とりあえずバージョンアップ時は削除
-            flush();
+            // flush();
         }
     }
 
@@ -131,12 +131,12 @@ chrome.runtime.onMessage.addListener(
             callback(lastData);
         } else if (message.hasOwnProperty("type") && message.type === "get-file-format") {
             // fileFormat
-            fileFormatStorage.get().then(format=>{
+            fileFormatStorage.get().then(format => {
                 callback(format)
             })
         } else if (message.hasOwnProperty("type") && message.type === "set-file-format") {
             // fileFormat
-            fileFormatStorage.update(message.data).then(()=>{
+            fileFormatStorage.update(message.data).then(() => {
                 callback()
             })
         }
@@ -144,3 +144,26 @@ chrome.runtime.onMessage.addListener(
         return true;
     }
 );
+
+
+async function getActiveName() {
+    // 現在アクティブであろう
+}
+async function addEcUser(ecName,userData={}){
+
+}
+async function getEcUsers(ecName) {
+    // ec登録名に紐づく名前を取得する
+    let key = `ecUsers`;
+    let list = [key]
+    let result = await chrome.storage.local.get(list);
+    let data = result[key];
+    // もしデータがなければ配列にする
+    if (!data) {
+        data = {};
+    }
+    // 無ければ空文字
+
+
+}
+
