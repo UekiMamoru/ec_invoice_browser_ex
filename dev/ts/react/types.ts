@@ -89,3 +89,9 @@ export type ChildToParentSenderData = {
     strVal?:string
     numberVal?:number
 }
+
+
+export type ZipTempData ={
+    fileName:string,
+    data:ArrayBufferLike
+}

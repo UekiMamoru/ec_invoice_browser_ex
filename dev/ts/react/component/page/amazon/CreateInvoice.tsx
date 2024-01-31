@@ -3,7 +3,8 @@ import {
     AmazonOrderDataObj,
     AmazonInvoiceObj,
     AmazonInvoiceDataParamObj,
-    AmazonResultTransferObject
+    AmazonResultTransferObject,
+    ZipTempData
 } from "../../../types";
 import {PDFDownloader} from "../../../../model/PDFDownloader";
 import {PDFBufferData} from "../../../../model/PDFBufferData";
@@ -11,19 +12,20 @@ import {useState} from "react";
 import {LoaderField} from "../../../../model/LoaderField";
 import {ViewLogger} from "../../../../view/ViewLogger";
 import {DownloadFileNameCreator} from "../../../../model/util/DownloadFileNameCreator";
+import JSZip from "jszip";
 
 const AMAZON_EC_NAME = "amazon";
 const loaderField = new LoaderField();
 const viewLogger = new ViewLogger();
 viewLogger.field = loaderField.msgBox;
 const downloadFileNameCreator = new DownloadFileNameCreator("amazon");
-
 export const CreateInvoice = (prop: {
     callback: Function,
     getState: Function
 }) => {
     let {callback, getState} = prop;
     let [isDigital, setIsDigital] = useState(false);
+    let [isZip, setIsZip] = useState(true);
 
     return (
 
@@ -32,13 +34,19 @@ export const CreateInvoice = (prop: {
                 <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                     callback(true);
                     createInvoiceData();
-                    createList(isDigital, callback)
+                    createList(isDigital, isZip, callback)
                 }} disabled={getState()}>
                     表示された注文情報のインボイスデータを作成
                 </button>
-                <label><input type="checkbox" disabled={getState()} checked={isDigital} onChange={() => {
-                    setIsDigital(!isDigital);
-                }}/>デジタル含める</label>
+                <div>
+                    <label><input type="checkbox" disabled={getState()} checked={isDigital} onChange={() => {
+                        setIsDigital(!isDigital);
+                    }}/>デジタル含める</label>
+                    <label><input type="checkbox" disabled={getState()} checked={isZip} onChange={() => {
+                        setIsZip(!isZip);
+                    }}/>年月ごとにまとめてZIPダウンロードをする</label>
+
+                </div>
             </div>
         </>
 
@@ -62,7 +70,8 @@ function fieldClose() {
 }
 
 
-async function createList(includeDigital: boolean = false, callback: Function) {
+async function createList(includeDigital: boolean = false, isZip: boolean = false, callback: Function) {
+    let zip = new JSZip();
     fieldOpen();
     let isPdfGetAndDownload = true;// document.getElementById(PDF_GET_AND_DOWNLOAD_CHOICE_ID).checked;
     let pdfGetAndDownloadMsg = `PDF取得とダウンロードを同時に行います`
@@ -73,12 +82,17 @@ async function createList(includeDigital: boolean = false, callback: Function) {
     exportUserLogMsg(pdfGetAndDownloadMsg)
     // デジタル以外を取得
     let list = includeDigital ? createOrders() : filterNonDigitalOrders();
-    exportUserLogMsg(`対象は${list.length}件です`)
+    exportUserLogMsg(`対象は${list.length}件です`);
+    // ZIP圧縮するかのふらぐ
+    let isMonthZIP = true;
+    let lastKey = "", ym = "";
+    let zipDataList: ZipTempData[] = [];
     let resultOrderOutputs = [];
     for (const amazonOrderDataObj of list) {
+        ym = getYearMonthData(amazonOrderDataObj);
         if (amazonOrderDataObj) {
             exportUserLogMsg(`注文番号${amazonOrderDataObj.no}の処理を開始します`)
-            let fileName = await  downloadFileNameCreator.createFileName(amazonOrderDataObj)//`amazon_${amazonOrderDataObj.date}_${amazonOrderDataObj.no}`
+            let fileName = await downloadFileNameCreator.createFileName(amazonOrderDataObj)//`amazon_${amazonOrderDataObj.date}_${amazonOrderDataObj.no}`
             let isInvoice = false;
             // todo 当該注文番号に紐づくシリアライズしたデータがあるかチェック
             let getVal = {
@@ -104,12 +118,17 @@ async function createList(includeDigital: boolean = false, callback: Function) {
                 //
                 let pdfStrs = data.pdfStrs;
                 let idx = 0;
-                for(let pdfStr of pdfStrs){
-                    let fileName = await  downloadFileNameCreator.createFileName(amazonOrderDataObj,idx > 1 ? idx - 1 : "");
+                for (let pdfStr of pdfStrs) {
+                    let fileName = await downloadFileNameCreator.createFileName(amazonOrderDataObj, idx > 1 ? idx - 1 : "");
                     idx++;
                     pdfArrayBuffer = (arrayBuffSerializableStringToArrayBuff(pdfStr));
                     if (pdfArrayBuffer) {
-                        if (isPdfGetAndDownload) downloadPDF(pdfArrayBuffer, fileName);
+                        if (isPdfGetAndDownload) {
+                            downloadPDF(pdfArrayBuffer, fileName);
+                        } else if (isMonthZIP) {
+                            // zipに追加
+                            zipDataList.push({fileName, data: pdfArrayBuffer})
+                        }
                     } else {
                         // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
                     }
@@ -238,7 +257,12 @@ async function createList(includeDigital: boolean = false, callback: Function) {
                                 if (isPdfGetAndDownload) {
                                     let number = idx > 1 ? `-${idx - 1}` : ""
                                     let exportFileName = `${fileName}${number}`
-                                    downloadPDF(pdfArrayBuffer, exportFileName);
+                                    if (isMonthZIP) {
+                                        // zipに追加
+                                        zipDataList.push({fileName: exportFileName, data: pdfArrayBuffer})
+                                    } else {
+                                        downloadPDF(pdfArrayBuffer, exportFileName);
+                                    }
                                 }
                             } else {
                                 // 何らかのエラーでpdfArrayBufferが作れなかったので、エラーとして注文番号を注文番号を保持
@@ -301,8 +325,38 @@ async function createList(includeDigital: boolean = false, callback: Function) {
             resultOrderOutputs.push(createOrderOutputObject(amazonOrderDataObj, amazonInvoiceObj))
 
         }
+        if (isMonthZIP) {
+            // もし、lastKeyとymが一致せず、かつ、pdfCacheにlastKeyのキーの情報あったらZIPでダウンロード
+            // pdfCacheの当該KeyValは削除
+            if (lastKey && ym !== lastKey) {
+                // ZIPダウンロード
+                let lastZip = zip;
+                zipDataList.forEach(zipData => {
+                    lastZip.file(zipData.fileName+".pdf", zipData.data);
+                })
+                downloadZip(lastZip, lastKey);
+                // リセット
+                zip = new JSZip();
+                zipDataList = []
+            }
+            lastKey = ym;
+        }
         await Thread.sleep(300);
         exportUserLogMsg(`${amazonOrderDataObj.no}の処理が終了しました`)
+    }
+    if (isMonthZIP) {
+        // もし、lastKeyとymが一致せず、かつ、pdfCacheにlastKeyのキーの情報あったらZIPでダウンロード
+        // pdfCacheの当該KeyValは削除
+        // zipインスタンスにデータが入ってればダウソ
+        if (zipDataList.length) {
+            // ZIPダウンロード
+            let lastZip = zip;
+            zipDataList.forEach(zipData => {
+                lastZip.file(zipData.fileName+".pdf", zipData.data);
+            })
+            downloadZip(lastZip, lastKey);
+            zipDataList = [];
+        }
     }
 
     // console.log(resultOrderOutputs);
@@ -490,4 +544,26 @@ function createAmazonInvoiceDataParamObj(): AmazonInvoiceDataParamObj {
         invoiceId: "",
         fileIdx: 0
     }
+}
+
+
+function getYearMonthData(amazonOrderDataObj: AmazonOrderDataObj): string {
+    let ym = "";
+    let date = amazonOrderDataObj.date;
+    // yyyy年m月を yyyymm に置換する
+    let splited = date.split(/[年]|[月]/ig);
+    ym = `${splited[0]}${zeroPad(splited[1])}`
+    return ym
+}
+
+function zeroPad(str: string) {
+    if (str.length < 2) {
+        return `0${str}`;
+
+    }
+    return str
+}
+
+function downloadZip(zip: JSZip, ym: string) {
+    PDFDownloader.downloadZipPDF(zip, ym)
 }

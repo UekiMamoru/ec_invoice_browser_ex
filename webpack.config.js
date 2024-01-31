@@ -14,7 +14,10 @@ module.exports = {
         "option": "./dev/ts/react/main/option.tsx",
         "history-result": "./dev/ts/react/main/history-result.tsx",
         "content": "./dev/ts/react/main/amazon/amazonProductBuyHistory.tsx",
-        "action/popup": "./dev/ts/react/main/popup.tsx"
+        "action/popup": "./dev/ts/react/main/popup.tsx",
+
+
+        'ttttt': "./dev/js/tmp/t.js",
     },
     devtool: false,
     mode: "development",
