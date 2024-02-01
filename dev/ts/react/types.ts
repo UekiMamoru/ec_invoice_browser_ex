@@ -57,41 +57,61 @@ export type FileNameFormatObj = {
         orderNum: FileNameTypeObj,
         siteName: FileNameTypeObj
     },
-    custom?:FileNameTypeObj[],
-    dateSeparator:number,
-    dateZeroPadding:number
+    custom?: FileNameTypeObj[],
+    dateSeparator: number,
+    dateZeroPadding: number
 }
 
 export const DATE_SEPARATOR_FORMAT_TYPE = {
-    HYPHEN:0,
-    SLASH:1,
-    UNDER_SCORE:3,
-    JP_YYYYMMDD:2
+    HYPHEN: 0,
+    SLASH: 1,
+    UNDER_SCORE: 3,
+    JP_YYYYMMDD: 2
 } as const;
 
 
 export const DATE_ZERO_PADDING_FORMAT_TYPE = {
-    PADDING:0,
-    NO_PADDING:1
+    PADDING: 0,
+    NO_PADDING: 1
 } as const;
 
 
 export type FileNameExportData = {
-    siteName:string,
-    orderNumber:string,
-    date:string
+    siteName: string,
+    orderNumber: string,
+    date: string
 }
 
 
 export type ChildToParentSenderData = {
-    sender:Function,
-    boolVal?:boolean
-    strVal?:string
-    numberVal?:number
+    sender: Function,
+    boolVal?: boolean
+    strVal?: string
+    numberVal?: number
 }
 
 
-export type ZipTempData ={
-    fileName:string,
-    data:ArrayBufferLike
+export type ZipTempData = {
+    fileName: string,
+    data: ArrayBufferLike
+}
+
+
+export type WorkerPdfDecodeData = {
+
+    type: `pdf-decode`
+    pdfStr: string
+}
+
+
+export type InvoicePDFDecodeResultData = {
+
+    type: string,
+    invoiceId: string,
+    isInvoice: boolean
+}
+
+export type ExportPDFBinaryFile = {
+    fileName:string
+    arrayBuffer:ArrayBufferLike
 }

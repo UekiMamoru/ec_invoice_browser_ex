@@ -1,9 +1,11 @@
-export class ViewLogger {
+import {Logger} from "../lib/Logger";
+
+export class ViewLogger extends Logger {
 
     private _field: HTMLElement;
 
     constructor() {
-
+        super()
         /**
          *
          * @type {HTMLElement}
