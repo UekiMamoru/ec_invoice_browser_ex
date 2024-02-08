@@ -1,6 +1,6 @@
 import {FileNameFormat} from "./FileNameFormat";
 import {
-    AmazonOrderDataObj,
+    AmazonOrderDataObj, AmazonResultTransferObject,
     DATE_SEPARATOR_FORMAT_TYPE, DATE_ZERO_PADDING_FORMAT_TYPE,
     FileNameExportData,
     FileNameFormatObj,
@@ -10,6 +10,7 @@ import {
 export class DownloadFileNameCreator {
     private _fileNameFormat: FileNameFormat;
     private _siteName: string = "";
+    private _formatData:FileNameFormatObj|null = null;
 
     constructor(_siteName: string, _fileNameFormat?: FileNameFormat) {
         this._siteName = _siteName
@@ -17,8 +18,11 @@ export class DownloadFileNameCreator {
             _fileNameFormat = new FileNameFormat();
         }
         this._fileNameFormat = _fileNameFormat
-        this._fileNameFormat.getFormat();
+        this._fileNameFormat.getFormat().then(fomat=>{
+            this._formatData = fomat
+        });
     }
+
 
     convert(format: string, fileNameFormatObj: FileNameFormatObj, amazonOrderDataObj: FileNameExportData) {
         let formatStr = this.viewNameToFormatPattern(format, fileNameFormatObj);
@@ -45,7 +49,28 @@ export class DownloadFileNameCreator {
         }
         let formatStr = this.convert(format,fileNameFormatObj,fileNameExportData)
         if (index !== undefined && index !== "") {
-            formatStr += index
+            formatStr += `__${index}`
+        }
+        return formatStr;
+    }
+
+     createFileNameAmazonResultTransferObject(amazonResultTransferObject:AmazonResultTransferObject,index?:number|string|undefined){
+        let fileNameFormatObj=this._formatData;
+        if(!fileNameFormatObj){
+            throw new Error("format obj not fined")
+        }
+        let format = fileNameFormatObj.format;
+        if (!format) {
+            format = fileNameFormatObj.default.format;
+        }
+        let fileNameExportData: FileNameExportData = {
+            orderNumber: amazonResultTransferObject.orderNumber,
+            date: amazonResultTransferObject.date,
+            siteName: this._siteName
+        }
+        let formatStr = this.convert(format,fileNameFormatObj,fileNameExportData)
+        if (index !== undefined && index !== "") {
+            formatStr += `__${index}`
         }
         return formatStr;
     }
