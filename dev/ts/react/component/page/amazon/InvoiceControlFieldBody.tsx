@@ -154,7 +154,8 @@ function nowLastYearList() {
         for (const e of filterd) {
             e.removeAttribute("selected");
         }
-        return [filterd[0], filterd[1]]
+        // 初年度の場合、1件しかない場合があるので判定をちゃんと入れる
+        return filterd.splice(0,2);///[filterd[0], filterd[1]]
     }
     return []
 }
