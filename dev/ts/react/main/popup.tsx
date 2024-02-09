@@ -102,15 +102,17 @@ const App = () => {
             {/*<p>サインイン</p>*/}
             {/*<button onClick={signIn}>Googleで登録して利用を開始</button>*/}
             {/*<p>{credential}</p>*/}
-            <div style={{paddingBottom:"5em"}}>
+            <div style={{paddingBottom:"3em"}}>
                 <button className={"btn"}><a href="https://www.amazon.co.jp/gp/your-account/order-history"
                                              target="_blank">Amazonの注文履歴を開く</a></button>
                 <EcHistoryLink siteName={siteName}/>
                 <div>
                     <Suspense fallback={<p>ロード中</p>}>
-
                         <FileNameFormatField/>
                     </Suspense>
+                </div>
+                <div style={{paddingTop:".5em",marginTop:".5em",fontSize:".95rem",borderTop:"2px solid #ccc"}}>
+                    <a href="https://forms.gle/8V5PJADY2Jio4Lb69" target="_blank">GoogleFormでお問い合わせ</a>
                 </div>
 
             </div>
